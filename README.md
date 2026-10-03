@@ -29,9 +29,9 @@ lendNborrow is a web-based platform that allows users to lend and borrow items w
 
 | Role | Member | Owns |
 |---|---|---|
-| A — Backend & DB | _[name]_ | Node/Express, schema, auth, APIs, deployment |
-| B — Frontend | _[name]_ | Pages, JS, API integration, responsiveness |
-| C — UX, Analytics & QA | _[name]_ | Wireframes, design system, dashboard/charts, seed data, testing, docs, deck |
+| A — Backend & DB | Emanuel Cruzat | Node/Express, schema, auth, APIs, deployment |
+| B — Frontend | Mikayla Banaag | Pages, JS, API integration, responsiveness |
+| C — UX, Analytics & QA | Lance Pria | Wireframes, design system, dashboard/charts, seed data, testing, docs, deck |
 
 **Rules**
 - Every PR is reviewed by someone other than the author.
