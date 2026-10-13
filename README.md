@@ -37,7 +37,7 @@ Since your group has exactly three members, each person should have a primary re
 
 The following assignments divide the work into backend development, frontend development, and system integration.
 
-### Member 1 — Backend and Database Developer
+### Emanuel Cruzat — Backend and Database Developer
 
 **Primary responsibility:** Build the server, API, database, and core system logic.
 
@@ -60,7 +60,7 @@ Tasks:
 - Borrowing request API.
 - Database schema and setup instructions.
 
-### Member 2 — Frontend and UI/UX Developer
+### Mikayla Banaag — Frontend and UI/UX Developer
 
 **Primary responsibility:** Design and implement the website interface.
 
@@ -83,7 +83,7 @@ Tasks:
 - Reusable interface components.
 - Consistent visual design across the website.
 
-### Member 3 — Borrowing Workflow, Integration, and QA Developer
+### Lance Pria — Borrowing Workflow, Integration, and QA Developer
 
 **Primary responsibility:** Implement the borrowing workflow, connect the frontend to the backend, and coordinate testing.
 
