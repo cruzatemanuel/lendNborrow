@@ -8,7 +8,7 @@
 |---|---|
 | Course | IT 314 — Web Systems and Technologies |
 | Project | lendNborrow |
-| Group members | 1. ________  2. ________  3. ________ |
+| Group members | 1. Lance Pria  2. Emanuel Cruzat  3. Mikayla Banaag |
 | Instructor | ________ |
 | Start date | ________ |
 | Final deadline | ________ |
