@@ -35,15 +35,15 @@ Confirm which features are included. Add rows as needed.
 
 | Feature | In MVP? | Owner | Status | Notes |
 |---|---|---|---|---|
-| Registration and login | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| Create/edit/delete item listings | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| Browse, search, and item details | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| Submit borrowing requests | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| Approve/reject requests | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| Track request/borrowing status | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| Mark items as returned | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| User dashboard | ☐ Yes / ☐ No | ________ | Not started | ________ |
-| Responsive layout | ☐ Yes / ☐ No | ________ | Not started | ________ |
+| Registration and login | YES | ________ | Not started | ________ |
+| Create/edit/delete item listings | YES | ________ | Not started | ________ |
+| Browse, search, and item details | YES | ________ | Not started | ________ |
+| Submit borrowing requests | YES | ________ | Not started | ________ |
+| Approve/reject requests | YES | ________ | Not started | ________ |
+| Track request/borrowing status | YES | ________ | Not started | ________ |
+| Mark items as returned | YES | ________ | Not started | ________ |
+| User dashboard | YES | ________ | Not started | ________ |
+| Responsive layout | YES | ________ | Not started | ________ |
 
 **Optional features (only after the MVP works):**
 - [ ] ________
