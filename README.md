@@ -10,10 +10,9 @@
 | Project | lendNborrow |
 | Group members | 1. Lance Pria  2. Emanuel Cruzat  3. Mikayla Banaag |
 | Instructor | ________ |
-| Start date | ________ |
+| Start date | Nov 1,2026 |
 | Final deadline | ________ |
 | Presentation date/time | ________ |
-| GitHub repository | ________ |
 | Task board / shared document | ________ |
 | Last updated | ________ |
 
