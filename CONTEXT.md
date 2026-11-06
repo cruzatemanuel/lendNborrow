@@ -17,7 +17,7 @@ lendNborrow is a web-based platform that lets users lend and borrow items within
 - **Due:** December 1–5, 2026
 - **Group:** Emanuel Cruzat, Mikayla Banaag, Lance Pria
 
-This is a collaborative project: all three members work on every part and get to experience the full stack, with no fixed per-person roles. Suggestion: in each phase, every member takes at least one task, and the people on each task rotate between phases.yy
+This is a collaborative project: all three members work on every part and get to experience the full stack, with no fixed per-person roles. Suggestion: in each phase, every member takes at least one task, and the people on each task rotate between phases.
 
 ---
 
