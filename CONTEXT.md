@@ -208,7 +208,7 @@ The plan aims to finish building by Nov 30, so Dec 1–5 is a safety buffer for 
 - 0.9 Every member clones the repo, runs `npm install` and `npm run dev`, and confirms the default page loads.
 - 0.10 Write the route map: Home, Browse, Item Detail, Add Item, Edit Item, My Listings, My Requests, Incoming Requests, Borrowed/Lent Out, Dashboard, Login, Register, Profile, 404.
 - 0.11 Finish the wireframes from the Flow A / Flow B flowchart in Claude Design and save screenshots in a `/docs` folder.
-- 0.12 Write Flow A / Flow B as a short text list in `/docs/flows.md` so AI prompts can reference them.f
+- 0.12 Write Flow A / Flow B as a short text list in `/docs/flows.md` so AI prompts can reference them.
 
 **Done when:** all three can run the app locally and push a branch to GitHub.
 
