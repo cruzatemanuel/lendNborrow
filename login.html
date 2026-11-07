@@ -1,0 +1,27 @@
+<!-- Login Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – lendNborrow</title>
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header id="navbar"></header>
+  <main>
+    <h2>Login</h2>
+    <div id="error" style="color:red; display:none;"></div>
+    <div id="message" style="color:green; display:none;"></div>
+    <div id="loading" style="display:none;">Loading...</div>
+    <form id="login-form">
+      <label>Email: <input type="email" name="email" required /></label><br/>
+      <label>Password: <input type="password" name="password" required /></label><br/>
+      <button type="submit">Log In</button>
+    </form>
+    <p>No account? <a href="register.html">Register</a></p>
+  </main>
+  <script type="module" src="js/pages/login.js"></script>
+</body>
+</html>
