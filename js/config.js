@@ -1,3 +1,3 @@
-// Replace these placeholders after the team creates the Supabase project in Phase 1.
-export const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-export const SUPABASE_ANON_KEY = "YOUR-ANON-KEY";
+// The browser communicates only with the Express API.
+// Supabase credentials belong in the server environment, never in frontend code.
+export const API_BASE_URL = "/api";

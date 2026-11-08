@@ -1,40 +1,20 @@
-lendnborrow/
-├── index.html
-├── login.html
-├── register.html
-├── browse.html
-├── item.html
-├── add-item.html
-├── edit-item.html
-├── my-listings.html
-├── my-requests.html
-├── incoming-requests.html
-├── borrowed.html
-├── dashboard.html
-├── profile.html
-├── 404.html
-├── css/
-│   ├── theme.css
-│   └── styles.css
-├── js/
-│   ├── config.js
-│   ├── supabaseClient.js
-│   ├── constants.js
-│   ├── auth.js
-│   ├── guard.js
-│   ├── layout.js
-│   ├── ui.js
-│   ├── items.js
-│   ├── requests.js
-│   ├── analytics.js
-│   └── pages/
-│       ├── register.js
-│       ├── login.js
-│       ├── profile.js
-│       ├── my-listings.js
-│       ├── browse.js
-│       ├── item.js
-│       └── ...  (one file per page)
-├── assets/
-└── docs/
-    └── flows.md
+# lendNborrow
+
+A BatStateU community item lending and borrowing web application. Verified students can list items, request to borrow, track returns, and view their activity. Administrators verify student accounts and view platform analytics.
+
+## Stack
+
+- Plain HTML, CSS, and vanilla JavaScript ES modules
+- Node.js and Express REST API
+- Supabase Postgres, Auth, and Storage
+- Chart.js for analytics visualizations
+
+The browser calls the Express API at `/api`; it does not communicate with Supabase directly. Credentials stay in server-side environment files.
+
+## Reference
+
+`docs/Guided_Website/` is the approved visual and interaction reference. It is a prototype only and must not be copied as production logic.
+
+## Plan
+
+The official scope, architecture, data model, and phased roadmap are in [CONTEXT.md](CONTEXT.md). Course requirements are in `docs/IT_314_Guidelines_Final_Project_2026.md`.

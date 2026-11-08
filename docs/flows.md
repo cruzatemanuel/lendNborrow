@@ -1,20 +1,33 @@
-# lendNborrow — User Flows
+# lendNborrow — Official User Flows
 
-## Flow A: Standard Lending and Borrowing Flow
-1. **Browse & Discovery:** Borrower browses available items on `browse.html` and selects an item to view `item.html`.
-2. **Borrow Request:** Borrower submits a borrow request specifying start date, return date, and a message. Request created with status `pending`.
-3. **Owner Review:** Item owner views pending requests in `incoming-requests.html`.
-4. **Approval:** Owner approves the request. Request status changes to `approved`; item status changes to `borrowed`. Other pending requests for the same item are rejected.
-5. **Item Handover & Use:** Borrower receives and uses the item until the agreed due date.
-6. **Return & Inspection:** Borrower returns the item. Owner marks the item as returned on `borrowed.html` specifying return condition (`good`).
-7. **Completion & Credit Score:** Request status changes to `returned`; item status changes back to `available`. Borrower's credit score increases (+5).
+## Flow 0: Account Registration and Verification
+
+1. A student registers with email, password, full name, student number, college, campus, contact number, and a student-ID image.
+2. The account is saved with `verification_status = pending`.
+3. An administrator reviews the submission in the verification queue.
+4. The administrator approves or rejects it with a reason.
+5. An approved student becomes `active` and can list or borrow items. A rejected student can correct and resubmit their details.
 
 ---
 
-## Flow B: Damaged, Lost, or Overdue Flow
-1. **Overdue Status:** If the due date passes without return, the item is flagged as overdue on `borrowed.html`. Credit score penalized (-10).
-2. **Return with Issues:** Borrower returns item in damaged condition, or reports item lost.
-3. **Owner Resolution:** Owner marks request as returned with condition `damaged` or `lost`.
-4. **Credit Score Penalty:** Borrower's credit score is penalized (-20).
-5. **Compensation Record:** A compensation entry is automatically generated in `compensations` with reason (`damaged` or `lost`), amount determined by owner, and `paid = false`.
-6. **Settlement:** Borrower settles the fee; owner marks compensation as `paid = true`.
+## Flow A: Standard Lending and Borrowing
+
+1. An active borrower browses available items and opens an item detail page.
+2. The borrower submits a request with start date, due date, and a message. The request is `pending`.
+3. The owner reviews incoming requests and approves or rejects one.
+4. Approval changes that request to `approved` and rejects other pending requests for the same item.
+5. When the borrower picks up the item, the request becomes `borrowing` and the item becomes `borrowed`.
+6. The borrower submits a return; the request becomes `return_submitted`.
+7. The owner inspects and confirms the return as `good`. The request becomes `returned`, the item becomes `available`, and the configured on-time credit rule is applied.
+
+---
+
+## Flow B: Late, Damaged, or Lost Return
+
+1. A request in `borrowing` whose due date has passed is shown as overdue.
+2. The borrower submits a return or the owner records the item as damaged or lost.
+3. The owner confirms the return and records the return condition.
+4. The request becomes `returned`; damaged or lost items do not return to `available` status.
+5. The configured late, damaged, or lost credit rule is applied.
+6. For damage or loss, a compensation record is created with `paid = false` and an owner-provided amount.
+7. After payment, the owner marks the compensation as paid.
