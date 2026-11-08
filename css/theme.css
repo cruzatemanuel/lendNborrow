@@ -1,11 +1,11 @@
 :root {
-  --color-primary: #0b5cab;
-  --color-primary-dark: #074782;
+  --color-primary: #a51f2b;
+  --color-primary-dark: #7d1420;
   --color-surface: #ffffff;
-  --color-background: #f5f7fa;
-  --color-text: #1f2937;
-  --color-muted: #5b6472;
-  --color-border: #d8dee8;
+  --color-background: #fbf5f4;
+  --color-text: #211a1b;
+  --color-muted: #75696a;
+  --color-border: #ead9d7;
   --font-sans: Arial, Helvetica, sans-serif;
   --space-1: 0.5rem;
   --space-2: 1rem;

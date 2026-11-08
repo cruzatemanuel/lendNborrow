@@ -30,3 +30,10 @@ Messages, notifications, appeals, Google sign-in, ratings, return photos, compen
 ## Plan
 
 The official scope, architecture, data model, and phased roadmap are in [CONTEXT.md](CONTEXT.md). Course requirements are in `docs/IT_314_Guidelines_Final_Project_2026.md`.
+
+
+## COMMENTS --
+
+November 9 - 1:44 am
+
+Idk if nasundan ko properly yung plans natin for development pero I started with fixing the placeholder navigation button tsaka sa landing page para may first part done us
