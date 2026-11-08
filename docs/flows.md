@@ -18,11 +18,11 @@
 4. Approval changes that request to `approved` and rejects other pending requests for the same item.
 5. When the borrower picks up the item, the request becomes `borrowing` and the item becomes `borrowed`.
 6. The borrower submits a return; the request becomes `return_submitted`.
-7. The owner inspects and confirms the return as `good`. The request becomes `returned`, the item becomes `available`, and the configured on-time credit rule is applied.
+7. The owner inspects and confirms the return. The request becomes `returned` and the item becomes `available`.
 
 ---
 
-## Flow B: Late, Damaged, or Lost Return
+## Flow B: Late, Damaged, or Lost Return — Phase 6 Stretch
 
 1. A request in `borrowing` whose due date has passed is shown as overdue.
 2. The borrower submits a return or the owner records the item as damaged or lost.

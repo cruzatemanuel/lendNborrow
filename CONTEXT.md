@@ -17,7 +17,7 @@ The visual and interaction reference is `docs/Guided_Website/`. It is a prototyp
 | Storage | Supabase Storage | Item images and student-ID images |
 | Charts | Chart.js CDN | Dashboard charts |
 
-The browser must communicate with Express only. Supabase URL, anon key, and service-role key belong in server environment variables; never put any secret in frontend JavaScript. `js/config.js` exports the API base path only.
+The browser must communicate with Express only. Supabase URL, anon key, and service-role key belong in server environment variables; never put any secret in frontend JavaScript. `js/config.js` exports the API base path only. One Express application serves the student pages, `admin.html`, static assets, and every API route; there is no separate admin application.
 
 ## Architecture and File Structure
 
@@ -62,11 +62,11 @@ User-provided content must be rendered with DOM APIs and `textContent`; do not i
 ### MVP
 
 - Email/password registration and login
-- Student profile: full name, student number, college, campus, contact, and credit score
+- Student profile: full name, student number, college, campus, and contact details
 - Student-ID upload and admin approval, rejection, or resubmission
 - Item listing creation, image upload, editing, deletion, availability control, search, filters, and detail pages
-- Borrow request, owner approval/rejection, pickup, return submission, owner confirmation, overdue state, compensation, and history
-- Student dashboard and admin analytics dashboard
+- Borrow request, owner approval/rejection, pickup, return submission, and owner confirmation
+- Basic student dashboard and one admin analytics dashboard
 - Responsive UI, loading, empty, validation, and error states
 
 ### Stretch Features
@@ -75,6 +75,7 @@ User-provided content must be rendered with DOM APIs and `textContent`; do not i
 - Account appeals and account locking
 - Google authentication
 - Ratings and return photos
+- Automated credit-score rules, overdue handling, compensation, and borrowing history
 
 ## Business Rules
 
@@ -94,42 +95,40 @@ User-provided content must be rendered with DOM APIs and `textContent`; do not i
 - Approving one request rejects other pending requests for that item.
 - Pickup moves an approved request to `borrowing` and the item to `borrowed`.
 - Owner return confirmation moves the request to `returned`; the item becomes `available` unless it was lost.
-- An active request past its due date is overdue.
 
-### Credit and compensation
+### Deferred credit and compensation rules
 
-- Credit is on a 0–5 scale; a new active student starts at 5.0.
-- The exact on-time, late, damaged, and lost score adjustments must be defined as constants before implementing return logic.
-- Damaged or lost returns create a compensation record; the owner sets the amount and can mark it paid.
-- Account locking threshold and appeals remain stretch decisions until formally approved.
+- Credit score uses a 0–5 scale if the stretch feature is approved.
+- Exact on-time, late, damaged, and lost score adjustments must be agreed before implementation.
+- Compensation, account locking, and appeals are Phase 6 stretch features and are not MVP acceptance criteria.
 
 ## Data Model
 
-**profiles** — `id`, `role`, `full_name`, `student_number`, `college`, `campus`, `contact`, `credit_score`, `verification_status`, `id_image_url`, `avatar_url`, `created_at`, `updated_at`
+**profiles** — `id`, `role`, `full_name`, `student_number`, `college`, `campus`, `contact`, `verification_status`, `id_image_url`, `avatar_url`, `created_at`, `updated_at`
 
 **items** — `id`, `owner_id`, `title`, `description`, `category`, `condition`, `image_url`, `status` (`available`, `borrowed`, `unavailable`, `lost`), `created_at`, `updated_at`
 
 **borrow_requests** — `id`, `item_id`, `borrower_id`, `owner_id`, `status`, `start_date`, `due_date`, `picked_up_at`, `return_submitted_at`, `returned_at`, `return_condition`, `message`, `rejection_reason`, `created_at`, `updated_at`
 
-**compensations** — `id`, `request_id`, `borrower_id`, `reason`, `amount`, `paid`, `paid_at`, `created_at`
+**compensations** — `id`, `request_id`, `borrower_id`, `reason`, `amount`, `paid`, `paid_at`, `created_at` (Phase 6 stretch)
 
 **messages** and **notifications** are stretch tables; create them only when their corresponding features are approved.
 
 ## Analytics
 
 - Trending items: borrow count by item, top 5–10.
-- College credit score: average `credit_score` and member count by college.
-- Compensation payers: borrowers with compensation, paid amount, and paid percentage by college.
 - Borrowing activity: requests over time.
-- Summary cards: total active students, active listings, active borrows, and overdue borrows.
+- Summary cards: total active students, active listings, active borrows, and completed returns.
 
 ## API Direction
 
 - `/api/auth/*` — registration, login, logout, session, profile
 - `/api/admin/*` — verification queue, approve/reject, analytics
 - `/api/items/*` — listings, images, browsing, item detail
-- `/api/requests/*` — create, approve, reject, cancel, pickup, return, compensation
+- `/api/requests/*` — create, approve, reject, cancel, pickup, return
 - `/api/analytics/*` — dashboard summaries and chart data
+
+Compensation endpoints are added only in Phase 6 if that stretch feature is approved.
 
 Every protected route verifies the authenticated user and checks ownership or role on the server. SQL functions handle transactional actions such as approval and return confirmation.
 
@@ -161,7 +160,7 @@ Build item creation, upload, edit/delete, availability, browse/search/filter/sor
 
 ### Phase 4 — Borrowing and Returns
 
-Build requests, approvals, rejection/cancellation, pickup, active-borrow tracking, return submission, return confirmation, overdue states, credit updates, and compensation.
+Build requests, approvals, rejection/cancellation, pickup, active-borrow tracking, return submission, and return confirmation.
 
 **Done when:** two accounts can complete the full lending lifecycle with correct status and ownership checks.
 
@@ -173,7 +172,7 @@ Build the student dashboard, admin analytics endpoints, summary cards, SQL views
 
 ### Phase 6 — Stretch Features
 
-Implement messaging, notifications, appeals, account locking, Google authentication, ratings, or return photos only after the MVP passes end-to-end testing.
+Implement messaging, notifications, appeals, account locking, Google authentication, ratings, return photos, automated credit rules, overdue handling, compensation, or borrowing history only after the MVP passes end-to-end testing.
 
 ### Phase 7 — QA, Deployment, and Demo
 

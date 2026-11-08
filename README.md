@@ -11,6 +11,18 @@ A BatStateU community item lending and borrowing web application. Verified stude
 
 The browser calls the Express API at `/api`; it does not communicate with Supabase directly. Credentials stay in server-side environment files.
 
+## MVP
+
+- Email/password registration and login
+- Student profile and admin verification
+- Create and manage listings
+- Browse and search items
+- Request, approve/reject, pick up, and return items
+- Basic student dashboard and one admin analytics dashboard
+- Responsive QA and deployment
+
+Messages, notifications, appeals, Google sign-in, ratings, return photos, compensation, and automated credit rules are Phase 6 stretch features. One Express application serves both student and administrator pages; there is no separate admin application.
+
 ## Reference
 
 `docs/Guided_Website/` is the approved visual and interaction reference. It is a prototype only and must not be copied as production logic.
