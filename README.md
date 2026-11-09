@@ -11,6 +11,16 @@ A BatStateU community item lending and borrowing web application. Verified stude
 
 The browser calls the Express API at `/api`; it does not communicate with Supabase directly. Credentials stay in server-side environment files.
 
+## Phase 1 Setup
+
+1. Create a Supabase project.
+2. Copy `server/.env.example` to `server/.env`, then add the Supabase URL, anon key, and service-role key.
+3. Install the server dependencies with `npm --prefix server install`.
+4. Run the SQL migrations in `supabase/migrations/` in numeric order, then run `supabase/seed.sql` for local/demo data.
+5. Start the unified application with `npm --prefix server run dev`, then open `http://localhost:3000`.
+
+`GET /api/health` confirms that Express can reach Supabase. Never commit `server/.env`.
+
 ## MVP
 
 - Email/password registration and login

@@ -57,6 +57,10 @@ lendNborrow/
 
 User-provided content must be rendered with DOM APIs and `textContent`; do not interpolate it into `innerHTML`.
 
+### Module Responsibilities
+
+Matching filenames in `js/` and `server/src/` are not duplicates. The browser-side modules (`js/auth.js`, `js/items.js`, `js/requests.js`, and `js/analytics.js`) only call Express through `js/api.js` and update the UI. Server route modules with the same domain name validate requests and coordinate Supabase operations. `server/src/middleware/auth.js` verifies the session and role before a protected route runs. No frontend module imports Supabase or server code.
+
 ## Product Scope
 
 ### MVP
