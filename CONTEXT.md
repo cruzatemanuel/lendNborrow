@@ -8,14 +8,14 @@ The visual and interaction reference is `docs/Guided_Website/`. It is a prototyp
 
 ## Official Stack
 
-| Layer | Technology | Responsibility |
-| --- | --- | --- |
-| Frontend | Plain HTML, CSS, and vanilla JavaScript ES modules | Multi-page UI, accessibility, responsive layout, calls to `/api` |
-| Backend | Node.js and Express | REST API, authorization, validation, business rules, serves the frontend |
-| Database | Supabase Postgres | Persistent application data, SQL functions, indexes, analytics views |
-| Authentication | Supabase Auth | Email/password users and authenticated server-side sessions |
-| Storage | Supabase Storage | Item images and student-ID images |
-| Charts | Chart.js CDN | Dashboard charts |
+| Layer          | Technology                                         | Responsibility                                                           |
+| -------------- | -------------------------------------------------- | ------------------------------------------------------------------------ |
+| Frontend       | Plain HTML, CSS, and vanilla JavaScript ES modules | Multi-page UI, accessibility, responsive layout, calls to `/api`         |
+| Backend        | Node.js and Express                                | REST API, authorization, validation, business rules, serves the frontend |
+| Database       | Supabase Postgres                                  | Persistent application data, SQL functions, indexes, analytics views     |
+| Authentication | Supabase Auth                                      | Email/password users and authenticated server-side sessions              |
+| Storage        | Supabase Storage                                   | Item images and student-ID images                                        |
+| Charts         | Chart.js CDN                                       | Dashboard charts                                                         |
 
 The browser must communicate with Express only. Supabase URL, anon key, and service-role key belong in server environment variables; never put any secret in frontend JavaScript. `js/config.js` exports the API base path only. One Express application serves the student pages, `admin.html`, static assets, and every API route; there is no separate admin application.
 
