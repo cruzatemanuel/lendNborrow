@@ -1,6 +1,6 @@
 # lendNborrow
 
-A BatStateU community item lending and borrowing web application. Verified students can list items, request to borrow, track returns, and view their activity. Administrators verify student accounts and view platform analytics.
+A BatStateU community item lending and borrowing web application. Students verify their identity using their official BatStateU GSuite account (`@g.batstate-u.edu.ph`). Verified students can list items, request to borrow, track returns, and view their lending activity. There are no administrator accounts; verification is automated via institutional email.
 
 ## Stack
 
@@ -23,15 +23,16 @@ The browser calls the Express API at `/api`; it does not communicate with Supaba
 
 ## MVP
 
-- Email/password registration and login
-- Student profile and admin verification
+- BatStateU GSuite email registration and login (`@g.batstate-u.edu.ph`)
+- Automated student verification via institutional email confirmation
+- Student profile management
 - Create and manage listings
 - Browse and search items
 - Request, approve/reject, pick up, and return items
-- Basic student dashboard and one admin analytics dashboard
+- Student dashboard with personal lending metrics
 - Responsive QA and deployment
 
-Messages, notifications, appeals, Google sign-in, ratings, return photos, compensation, and automated credit rules are Phase 6 stretch features. One Express application serves both student and administrator pages; there is no separate admin application.
+Messages, notifications, Google sign-in (`@g.batstate-u.edu.ph`), ratings, return photos, compensation, and automated credit rules are Phase 6 stretch features.
 
 ## Reference
 
