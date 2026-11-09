@@ -2,93 +2,57 @@
 
 ## Project Summary
 
-lendNborrow is a community item lending and borrowing platform for BatStateU students. Verified students can list items, browse listings, request to borrow, track returns, and view their activity. Administrators verify student accounts and view platform analytics.
+lendNborrow is a community item lending and borrowing platform for BatStateU students. Students verify their institutional identity using their official BatStateU GSuite account (`@g.batstate-u.edu.ph`). Verified students can list items, browse listings, request to borrow, track returns, and view their personal lending activity. There are no administrator accounts or manual ID approval queues; verification is automated via institutional GSuite email validation.
 
 The visual and interaction reference is `docs/Guided_Website/`. It is a prototype reference only; do not copy its `localStorage`, `innerHTML`, or fake API implementation into the production system.
 
 ## Official Stack
 
-| Layer | Technology | Responsibility |
-| --- | --- | --- |
-| Frontend | Plain HTML, CSS, and vanilla JavaScript ES modules | Multi-page UI, accessibility, responsive layout, calls to `/api` |
-| Backend | Node.js and Express | REST API, authorization, validation, business rules, serves the frontend |
-| Database | Supabase Postgres | Persistent application data, SQL functions, indexes, analytics views |
-| Authentication | Supabase Auth | Email/password users and authenticated server-side sessions |
-| Storage | Supabase Storage | Item images and student-ID images |
-| Charts | Chart.js CDN | Dashboard charts |
+| Layer          | Technology                                         | Responsibility                                                           |
+| -------------- | -------------------------------------------------- | ------------------------------------------------------------------------ |
+| Frontend       | Plain HTML, CSS, and vanilla JavaScript ES modules | Multi-page UI, accessibility, responsive layout, calls to `/api`         |
+| Backend        | Node.js and Express                                | REST API, authorization, validation, business rules, serves the frontend |
+| Database       | Supabase Postgres                                  | Persistent application data, SQL functions, indexes, analytics views     |
+| Authentication | Supabase Auth                                      | Email/password users and authenticated server-side sessions              |
+| Storage        | Supabase Storage                                   | Item images                                                              |
+| Charts         | Chart.js CDN                                       | Dashboard charts                                                         |
 
-The browser must communicate with Express only. Supabase URL, anon key, and service-role key belong in server environment variables; never put any secret in frontend JavaScript. `js/config.js` exports the API base path only. One Express application serves the student pages, `admin.html`, static assets, and every API route; there is no separate admin application.
-
-## Architecture and File Structure
-
-```
-lendNborrow/
-├── *.html
-├── css/
-│   ├── theme.css
-│   └── styles.css
-├── js/
-│   ├── config.js
-│   ├── api.js
-│   ├── auth.js
-│   ├── guard.js
-│   ├── layout.js
-│   ├── ui.js
-│   ├── items.js
-│   ├── requests.js
-│   ├── analytics.js
-│   └── pages/
-├── server/
-│   ├── src/
-│   │   ├── app.js
-│   │   ├── routes/
-│   │   ├── middleware/
-│   │   └── services/
-│   └── .env.example
-├── supabase/
-│   ├── migrations/
-│   └── seed.sql
-├── assets/
-└── docs/
-    ├── flows.md
-    ├── Guided_Website/
-    └── IT_314_Guidelines_Final_Project_2026.md
-```
-
-User-provided content must be rendered with DOM APIs and `textContent`; do not interpolate it into `innerHTML`.
+The browser must communicate with Express only. Supabase URL, anon key, and service-role key belong in server environment variables; never put any secret in frontend JavaScript. `js/config.js` exports the API base path only. One Express application serves the student pages, static assets, and every API route.
 
 ### Module Responsibilities
 
-Matching filenames in `js/` and `server/src/` are not duplicates. The browser-side modules (`js/auth.js`, `js/items.js`, `js/requests.js`, and `js/analytics.js`) only call Express through `js/api.js` and update the UI. Server route modules with the same domain name validate requests and coordinate Supabase operations. `server/src/middleware/auth.js` verifies the session and role before a protected route runs. No frontend module imports Supabase or server code.
+Matching filenames in `js/` and `server/src/` are not duplicates. The browser-side modules (`js/auth.js`, `js/items.js`, `js/requests.js`, and `js/analytics.js`) only call Express through `js/api.js` and update the UI. Server route modules with the same domain name validate requests and coordinate Supabase operations. `server/src/middleware/auth.js` verifies the session and student identity before a protected route runs. No frontend module imports Supabase or server code.
 
 ## Product Scope
 
 ### MVP
 
-- Email/password registration and login
+- Email/password registration and login restricted strictly to BatStateU GSuite accounts (`@g.batstate-u.edu.ph`)
+- Automated verification via GSuite institutional email domain check and email confirmation (no manual admin approval)
 - Student profile: full name, student number, college, campus, and contact details
-- Student-ID upload and admin approval, rejection, or resubmission
 - Item listing creation, image upload, editing, deletion, availability control, search, filters, and detail pages
 - Borrow request, owner approval/rejection, pickup, return submission, and owner confirmation
-- Basic student dashboard and one admin analytics dashboard
+- Student dashboard with personal lending stats (active listings, borrowed items, pending requests, completed returns)
 - Responsive UI, loading, empty, validation, and error states
 
 ### Stretch Features
 
 - Messaging and notifications
-- Account appeals and account locking
-- Google authentication
+- Google OAuth sign-in (restricted to `@g.batstate-u.edu.ph`)
 - Ratings and return photos
 - Automated credit-score rules, overdue handling, compensation, and borrowing history
 
 ## Business Rules
 
-### Roles and verification
+### Institutional Verification & Access
 
-- Roles: `student`, `admin`.
-- Verification statuses: `new`, `pending`, `active`, `rejected`, `suspended`, `locked`.
-- Only active students can create listings or submit borrowing requests.
-- Administrators can review student-ID submissions and view platform analytics.
+- Single role: `student` (all participants are peer students).
+- Verification is automated:
+  - Registration rejects any email that does not end in `@g.batstate-u.edu.ph`.
+  - Upon email confirmation via Supabase Auth, `verification_status` is `active`.
+  - Non-GSuite emails cannot be registered.
+- Only active verified students can create listings or submit borrowing requests.
+- No administrator accounts, admin login, or manual verification review queues.
 
 ### Borrowing lifecycle
 
@@ -104,11 +68,11 @@ Matching filenames in `js/` and `server/src/` are not duplicates. The browser-si
 
 - Credit score uses a 0–5 scale if the stretch feature is approved.
 - Exact on-time, late, damaged, and lost score adjustments must be agreed before implementation.
-- Compensation, account locking, and appeals are Phase 6 stretch features and are not MVP acceptance criteria.
+- Compensation and account locking are Phase 6 stretch features and are not MVP acceptance criteria.
 
 ## Data Model
 
-**profiles** — `id`, `role`, `full_name`, `student_number`, `college`, `campus`, `contact`, `verification_status`, `id_image_url`, `avatar_url`, `created_at`, `updated_at`
+**profiles** — `id`, `full_name`, `student_number`, `college`, `campus`, `contact`, `verification_status` (`pending`, `active`, `suspended`), `avatar_url`, `created_at`, `updated_at`
 
 **items** — `id`, `owner_id`, `title`, `description`, `category`, `condition`, `image_url`, `status` (`available`, `borrowed`, `unavailable`, `lost`), `created_at`, `updated_at`
 
@@ -118,19 +82,22 @@ Matching filenames in `js/` and `server/src/` are not duplicates. The browser-si
 
 **messages** and **notifications** are stretch tables; create them only when their corresponding features are approved.
 
-## Analytics
+## Analytics & Dashboard
 
-- Trending items: borrow count by item, top 5–10.
-- Borrowing activity: requests over time.
-- Summary cards: total active students, active listings, active borrows, and completed returns.
+- Personal overview cards: active listings, items on loan, pending requests, completed returns.
+- Recent borrowing and lending activity timeline.
+- Top borrowed categories and campus activity for community insight.
 
 ## API Direction
 
-- `/api/auth/*` — registration, login, logout, session, profile
-- `/api/admin/*` — verification queue, approve/reject, analytics
+- `/api/auth/*` — registration (with `@g.batstate-u.edu.ph` enforcement), login, logout, session, profile
 - `/api/items/*` — listings, images, browsing, item detail
 - `/api/requests/*` — create, approve, reject, cancel, pickup, return
-- `/api/analytics/*` — dashboard summaries and chart data
+- `/api/analytics/*` — student dashboard summaries and personal metrics
+
+Compensation endpoints are added only in Phase 6 if that stretch feature is approved.
+
+Every protected route verifies the authenticated student and checks item/request ownership on the server. SQL functions handle transactional actions such as approval and return confirmation.
 
 Compensation endpoints are added only in Phase 6 if that stretch feature is approved.
 
@@ -150,11 +117,11 @@ Set up Node/Express, server environment configuration, Supabase project, schemas
 
 **Done when:** Express can securely read seeded data from Supabase through an API endpoint.
 
-### Phase 2 — Authentication and Verification
+### Phase 2 — Authentication and GSuite Verification
 
-Build registration, login, session handling, profile editing, student-ID upload, verification-status views, and the admin approval/rejection workflow.
+Build registration with `@g.batstate-u.edu.ph` email domain validation, email verification handling, login, session management, profile editing, and verification status protection.
 
-**Done when:** a student can register, submit verification, and access protected functionality only after approval.
+**Done when:** a student can register with a valid BatStateU GSuite email, confirm their account, and access lending and borrowing functionality. Non-GSuite emails are rejected.
 
 ### Phase 3 — Listings and Browsing
 
@@ -168,11 +135,11 @@ Build requests, approvals, rejection/cancellation, pickup, active-borrow trackin
 
 **Done when:** two accounts can complete the full lending lifecycle with correct status and ownership checks.
 
-### Phase 5 — Dashboards and Analytics
+### Phase 5 — Dashboards and Personal Analytics
 
-Build the student dashboard, admin analytics endpoints, summary cards, SQL views, and Chart.js visualizations.
+Build the student dashboard, activity summary cards, borrowing history, and personal metrics with Chart.js visualizations.
 
-**Done when:** dashboard metrics match seeded and manually verified database data.
+**Done when:** dashboard metrics match active listings, current borrows, and completed return records accurately.
 
 ### Phase 6 — Stretch Features
 
