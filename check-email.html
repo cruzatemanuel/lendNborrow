@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Check Your Email — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div class="auth-container" style="text-align: center;">
+      <div style="font-size: 54px; margin-bottom: 16px;">✉️</div>
+      <h1 class="page-title" style="font-size: 26px; margin-bottom: 12px;">Confirm Your Institutional Email</h1>
+      <p style="color: var(--ink-light); font-size: 15px; margin-bottom: 20px;">
+        We sent an automated verification link to your BatStateU GSuite inbox:
+      </p>
+
+      <div style="background: var(--pink); color: var(--maroon-dark); font-weight: 700; padding: 12px; border-radius: var(--radius); margin-bottom: 24px; word-break: break-all;">
+        <span id="display-email">your-email@g.batstate-u.edu.ph</span>
+      </div>
+
+      <div style="text-align: left; background: #FAF6F5; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-light); font-size: 13px; color: var(--ink-light); margin-bottom: 24px;">
+        <p style="font-weight: 700; color: var(--maroon-dark); margin-bottom: 6px;">Next steps:</p>
+        <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 4px;">
+          <li>Open your official BatStateU Google Workspace email.</li>
+          <li>Click the verification link from <strong>lendNborrow</strong>.</li>
+          <li>Return to the sign-in page to start lending and borrowing.</li>
+        </ol>
+      </div>
+
+      <a href="/signin.html" class="btn btn-gold btn-block">Go to Sign In</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initLayout } from '/js/layout.js';
+    initLayout();
+
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get('email');
+    if (email) {
+      document.getElementById('display-email').textContent = email;
+    }
+  </script>
+</body>
+</html>
+

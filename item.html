@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Item Details — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div style="margin-bottom: 20px;">
+      <a href="/browse.html" style="font-weight: 700; color: var(--maroon); font-size: 14px;">← Back to Browse</a>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading-box" class="loading-box">
+      <div class="spinner"></div>
+      <p>Loading item details...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-box" class="empty-state hidden">
+      <h3 style="color: var(--red);">Item Not Found</h3>
+      <p>This listing may have been removed or does not exist.</p>
+      <a href="/browse.html" class="btn btn-outline btn-sm" style="margin-top: 16px;">Back to Catalog</a>
+    </div>
+
+    <!-- Item Layout Container -->
+    <div id="item-layout" class="item-detail-layout hidden">
+      <div class="item-detail-media">
+        <div id="img-container" style="width: 100%; height: 360px; background: #F3EAE9; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 64px; overflow: hidden;">
+          📦
+        </div>
+      </div>
+
+      <div class="item-detail-info">
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+          <span id="item-category" class="badge badge-maroon">Category</span>
+          <span id="item-status" class="badge badge-green">Available</span>
+        </div>
+
+        <h1 id="item-title">Item Title</h1>
+        <p id="item-desc" style="color: var(--ink-light); margin: 16px 0; line-height: 1.6; white-space: pre-wrap;"></p>
+
+        <!-- Specs Grid -->
+        <div class="item-specs-grid">
+          <div class="spec-item">
+            <span class="spec-label">Condition</span>
+            <span class="spec-value" id="item-condition">Good</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Max Borrow Duration</span>
+            <span class="spec-value" id="item-duration">7 days</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Pickup Location</span>
+            <span class="spec-value" id="item-location">Alangilan Campus</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Listed By</span>
+            <span class="spec-value" id="item-owner">Student</span>
+          </div>
+        </div>
+
+        <!-- Action Area -->
+        <div id="action-area" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-light);">
+          <!-- Dynamic action buttons injected via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Borrow Request Modal Form -->
+    <div id="request-modal" class="modal-backdrop hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Request to Borrow</h3>
+          <button id="close-modal-btn" class="modal-close">&times;</button>
+        </div>
+        <form id="borrow-form">
+          <div class="modal-body">
+            <p style="font-size: 14px; margin-bottom: 16px; color: var(--ink-light);">
+              You are requesting to borrow: <strong id="modal-item-title" style="color: var(--maroon);"></strong>
+            </p>
+
+            <div id="request-error" class="hidden" style="background: var(--red-soft); color: var(--red); padding: 10px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px;"></div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="start_date">Pickup Date *</label>
+                <input type="date" id="start_date" required />
+              </div>
+              <div class="form-group">
+                <label for="due_date">Return Date *</label>
+                <input type="date" id="due_date" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="req_message">Message to Owner (Optional)</label>
+              <textarea id="req_message" rows="3" placeholder="State your purpose or preferred meeting spot on campus..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancel-req-btn" class="btn btn-secondary btn-sm">Cancel</button>
+            <button type="submit" id="submit-req-btn" class="btn btn-gold btn-sm">Send Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout, showToast, showModal } from '/js/layout.js';
+    import { getMe } from '/js/auth.js';
+    import { getItem, deleteItem, toggleAvailability } from '/js/items.js';
+    import { createRequest } from '/js/requests.js';
+
+    await initLayout();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const itemId = urlParams.get('id');
+
+    if (!itemId) {
+      window.location.href = '/browse.html';
+    }
+
+    const loadingBox = document.getElementById('loading-box');
+    const errorBox = document.getElementById('error-box');
+    const itemLayout = document.getElementById('item-layout');
+    const actionArea = document.getElementById('action-area');
+    const requestModal = document.getElementById('request-modal');
+    const borrowForm = document.getElementById('borrow-form');
+    const requestError = document.getElementById('request-error');
+
+    let currentItem = null;
+    let currentUser = null;
+
+    try {
+      currentUser = await getMe(true);
+    } catch (e) {
+      currentUser = null;
+    }
+
+    async function loadItem() {
+      try {
+        const result = await getItem(itemId);
+        currentItem = result.item;
+        renderDetails();
+      } catch (err) {
+        loadingBox.classList.add('hidden');
+        errorBox.classList.remove('hidden');
+      }
+    }
+
+    function renderDetails() {
+      loadingBox.classList.add('hidden');
+      itemLayout.classList.remove('hidden');
+
+      document.title = `${currentItem.title} — lendNborrow`;
+      document.getElementById('item-title').textContent = currentItem.title;
+      document.getElementById('item-category').textContent = currentItem.category;
+      document.getElementById('item-desc').textContent = currentItem.description || 'No description provided.';
+      document.getElementById('item-condition').textContent = currentItem.condition || 'Good';
+      document.getElementById('item-duration').textContent = `${currentItem.max_borrow_days} days max`;
+      document.getElementById('item-location').textContent = currentItem.pickup_location || 'Alangilan Campus';
+      document.getElementById('item-owner').textContent = `${currentItem.owner?.full_name || 'Student'} (${currentItem.owner?.college || 'Alangilan'})`;
+
+      const statusEl = document.getElementById('item-status');
+      statusEl.textContent = currentItem.status;
+      statusEl.className = `badge ${currentItem.status === 'available' ? 'badge-green' : 'badge-muted'}`;
+
+      const imgBox = document.getElementById('img-container');
+      if (currentItem.image_url) {
+        imgBox.replaceChildren();
+        const img = document.createElement('img');
+        img.src = currentItem.image_url;
+        img.alt = currentItem.title;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        imgBox.appendChild(img);
+      }
+
+      // Render Actions
+      actionArea.replaceChildren();
+
+      const isOwner = currentUser && currentUser.id === currentItem.owner_id;
+
+      if (isOwner) {
+        // Owner controls
+        const ownerDiv = document.createElement('div');
+        ownerDiv.style.display = 'flex';
+        ownerDiv.style.gap = '12px';
+        ownerDiv.style.flexWrap = 'wrap';
+
+        const editBtn = document.createElement('a');
+        editBtn.href = `/listing-form.html?id=${currentItem.id}`;
+        editBtn.className = 'btn btn-outline btn-sm';
+        editBtn.textContent = '✏️ Edit Listing';
+        ownerDiv.appendChild(editBtn);
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'btn btn-secondary btn-sm';
+        toggleBtn.textContent = currentItem.status === 'available' ? 'Mark Unavailable' : 'Mark Available';
+        toggleBtn.addEventListener('click', async () => {
+          try {
+            await toggleAvailability(currentItem.id);
+            showToast('Listing availability updated.', 'success');
+            loadItem();
+          } catch (err) {
+            showToast(err.message, 'error');
+          }
+        });
+        ownerDiv.appendChild(toggleBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger btn-sm';
+        deleteBtn.textContent = '🗑️ Delete Listing';
+        deleteBtn.addEventListener('click', () => {
+          showModal({
+            title: 'Delete Listing',
+            message: `Are you sure you want to permanently delete "${currentItem.title}"?`,
+            confirmText: 'Delete',
+            onConfirm: async () => {
+              try {
+                await deleteItem(currentItem.id);
+                showToast('Listing deleted successfully.', 'success');
+                setTimeout(() => window.location.href = '/my-listings.html', 800);
+              } catch (err) {
+                showToast(err.message, 'error');
+              }
+            }
+          });
+        });
+        ownerDiv.appendChild(deleteBtn);
+
+        actionArea.appendChild(ownerDiv);
+      } else {
+        // Borrower controls
+        if (currentItem.status === 'available') {
+          const reqBtn = document.createElement('button');
+          reqBtn.className = 'btn btn-gold';
+          reqBtn.textContent = 'Request to Borrow';
+          reqBtn.addEventListener('click', () => {
+            if (!currentUser) {
+              window.location.href = `/signin.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+              return;
+            }
+            openRequestModal();
+          });
+          actionArea.appendChild(reqBtn);
+        } else {
+          const unavailableMsg = document.createElement('p');
+          unavailableMsg.style.color = 'var(--muted)';
+          unavailableMsg.style.fontWeight = '600';
+          unavailableMsg.textContent = `This item is currently ${currentItem.status} and cannot be requested.`;
+          actionArea.appendChild(unavailableMsg);
+        }
+      }
+    }
+
+    function openRequestModal() {
+      document.getElementById('modal-item-title').textContent = currentItem.title;
+      requestError.classList.add('hidden');
+
+      // Set min dates
+      const today = new Date().toISOString().split('T')[0];
+      const startInput = document.getElementById('start_date');
+      const dueInput = document.getElementById('due_date');
+
+      startInput.min = today;
+      startInput.value = today;
+
+      const defaultDue = new Date();
+      defaultDue.setDate(defaultDue.getDate() + Math.min(3, currentItem.max_borrow_days));
+      dueInput.min = today;
+      dueInput.value = defaultDue.toISOString().split('T')[0];
+
+      requestModal.classList.remove('hidden');
+    }
+
+    document.getElementById('close-modal-btn').addEventListener('click', () => {
+      requestModal.classList.add('hidden');
+    });
+    document.getElementById('cancel-req-btn').addEventListener('click', () => {
+      requestModal.classList.add('hidden');
+    });
+
+    borrowForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      requestError.classList.add('hidden');
+
+      const startDate = document.getElementById('start_date').value;
+      const dueDate = document.getElementById('due_date').value;
+      const message = document.getElementById('req_message').value.trim();
+
+      const submitBtn = document.getElementById('submit-req-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        await createRequest({
+          item_id: currentItem.id,
+          start_date: startDate,
+          due_date: dueDate,
+          message
+        });
+
+        requestModal.classList.add('hidden');
+        showToast('Borrow request submitted successfully!', 'success');
+        setTimeout(() => {
+          window.location.href = '/my-borrows.html';
+        }, 800);
+      } catch (err) {
+        requestError.textContent = err.message || 'Failed to submit request.';
+        requestError.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Request';
+      }
+    });
+
+    loadItem();
+  </script>
+</body>
+</html>
+

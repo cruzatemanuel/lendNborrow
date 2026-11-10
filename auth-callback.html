@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verifying Authentication — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div class="auth-container" style="text-align: center;">
+      <div id="loading-box" class="loading-box">
+        <div class="spinner"></div>
+        <p>Verifying authentication...</p>
+      </div>
+
+      <div id="error-box" class="hidden">
+        <div style="font-size: 48px; margin-bottom: 12px;">🚫</div>
+        <h2 style="color: var(--red); margin-bottom: 12px;">Authentication Denied</h2>
+        <p id="error-message" style="color: var(--ink-light); margin-bottom: 24px; font-size: 14px;"></p>
+        <a href="/signin.html" class="btn btn-maroon btn-block">Back to Sign In</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initLayout } from '/js/layout.js';
+    import { sendGoogleSession } from '/js/auth.js';
+
+    initLayout();
+
+    const loadingBox = document.getElementById('loading-box');
+    const errorBox = document.getElementById('error-box');
+    const errorMsg = document.getElementById('error-message');
+
+    async function processCallback() {
+      // Parse hash fragment (#access_token=...&...)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const queryParams = new URLSearchParams(window.location.search);
+
+      const accessToken = hashParams.get('access_token') || queryParams.get('access_token');
+
+      if (!accessToken) {
+        // If query has error or code
+        const errorDesc = hashParams.get('error_description') || queryParams.get('error_description');
+        showError(errorDesc || 'No authorization token found in callback.');
+        return;
+      }
+
+      try {
+        const result = await sendGoogleSession(accessToken);
+        const user = result.user;
+
+        // If newly registered Google user has incomplete profile, redirect to profile to complete
+        if (!user.student_number || !user.college) {
+          window.location.href = '/profile.html?first_time=1';
+        } else {
+          window.location.href = '/dashboard.html';
+        }
+      } catch (err) {
+        showError(err.message || 'Authorization failed. Only @g.batstate-u.edu.ph accounts are permitted.');
+      }
+    }
+
+    function showError(msg) {
+      loadingBox.classList.add('hidden');
+      errorMsg.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+
+    processCallback();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Registration — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div class="auth-container" style="max-width: 540px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 class="page-title" style="font-size: 26px;">Create Student Account</h1>
+        <p class="page-subtitle">Join the BatStateU Alangilan lending network</p>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="error-alert" class="hidden" style="background: var(--red-soft); color: var(--red); border: 1px solid var(--red); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px;"></div>
+
+      <form id="signup-form">
+        <div class="form-group">
+          <label for="email">BatStateU GSuite Institutional Email *</label>
+          <input type="email" id="email" required placeholder="sr-code@g.batstate-u.edu.ph" autocomplete="email" />
+          <div class="form-help">Must end with @g.batstate-u.edu.ph. A confirmation link will be sent here.</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="password">Password *</label>
+            <input type="password" id="password" required minlength="6" placeholder="Min 6 characters" autocomplete="new-password" />
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Confirm Password *</label>
+            <input type="password" id="confirm-password" required minlength="6" placeholder="Re-type password" autocomplete="new-password" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="full_name">Full Name *</label>
+          <input type="text" id="full_name" required placeholder="Juan Dela Cruz" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="student_number">Student / SR-Code *</label>
+            <input type="text" id="student_number" required placeholder="21-01234" />
+          </div>
+          <div class="form-group">
+            <label for="college">College / Faculty *</label>
+            <select id="college" required>
+              <option value="">Select College</option>
+              <option value="CICS">CICS (Informatics & Computing)</option>
+              <option value="CEAFA">CEAFA (Engineering & Architecture)</option>
+              <option value="CIT">CIT (Industrial Technology)</option>
+              <option value="CABEIHM">CABEIHM (Accountancy & Business)</option>
+              <option value="CAS">CAS (Arts & Sciences)</option>
+              <option value="CTE">CTE (Teacher Education)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="campus">Campus</label>
+            <input type="text" id="campus" value="Alangilan" required readonly style="background: #F5F5F5;" />
+          </div>
+          <div class="form-group">
+            <label for="contact">Contact Number</label>
+            <input type="text" id="contact" placeholder="09123456789" />
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-maroon btn-block" style="margin-top: 10px;">
+          Create Account & Verify Email
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 24px; font-size: 14px; color: var(--muted);">
+        Already registered? <a href="/signin.html" style="color: var(--maroon); font-weight: 700;">Sign in here</a>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout, showToast } from '/js/layout.js';
+    import { register } from '/js/auth.js';
+
+    initLayout();
+
+    const form = document.getElementById('signup-form');
+    const errorAlert = document.getElementById('error-alert');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorAlert.classList.add('hidden');
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirm-password').value;
+      const full_name = document.getElementById('full_name').value.trim();
+      const student_number = document.getElementById('student_number').value.trim();
+      const college = document.getElementById('college').value;
+      const campus = document.getElementById('campus').value.trim();
+      const contact = document.getElementById('contact').value.trim();
+
+      if (!email.toLowerCase().endsWith('@g.batstate-u.edu.ph')) {
+        errorAlert.textContent = 'Registration requires an official BatStateU GSuite email (@g.batstate-u.edu.ph).';
+        errorAlert.classList.remove('hidden');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        errorAlert.textContent = 'Passwords do not match.';
+        errorAlert.classList.remove('hidden');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Creating account...';
+
+      try {
+        await register({
+          email,
+          password,
+          full_name,
+          student_number,
+          college,
+          campus,
+          contact
+        });
+
+        window.location.href = `/check-email.html?email=${encodeURIComponent(email)}`;
+      } catch (err) {
+        errorAlert.textContent = err.message || 'Registration failed. Please try again.';
+        errorAlert.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account & Verify Email';
+      }
+    });
+  </script>
+</body>
+</html>
+
