@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lendNborrow — Borrow what you need. Lend what you don't.</title>
+  <meta name="description" content="Peer-to-peer item lending platform for BatStateU Alangilan students." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <section class="landing-hero" aria-labelledby="landing-heading">
+      <div class="landing-copy">
+        <span class="landing-eyebrow">BatStateU Alangilan · Students Only</span>
+        <h1 id="landing-heading"><span>Borrow what you need.</span> Lend what you don't.</h1>
+        <p class="landing-description">
+          Share calculators, drafting tools, lab equipment, and textbooks with fellow Red Spartans.
+          Safe, verified, and completely free on campus.
+        </p>
+
+        <div class="landing-actions">
+          <a href="/browse.html" class="btn btn-gold">Browse Catalog</a>
+          <a href="/signup.html" class="btn btn-outline">Create Account</a>
+          <a id="btn-google-landing" href="#" class="btn btn-secondary hidden">
+            <span>Sign in with Google</span>
+          </a>
+        </div>
+
+        <p class="landing-note">
+          🔒 Restricted to official BatStateU GSuite accounts (<code style="color: var(--maroon);">@g.batstate-u.edu.ph</code>).
+        </p>
+      </div>
+
+      <div class="landing-art">
+        <img src="/assets/logo.png" alt="lendNborrow emblem" />
+        <p class="landing-tagline">LEND. <span>BORROW.</span> CONNECT.</p>
+      </div>
+    </section>
+
+    <!-- Value Highlights Grid -->
+    <section style="margin-top: 48px;">
+      <div class="stat-panel-grid">
+        <div class="card">
+          <div class="card-body">
+            <h3 style="color: var(--maroon); margin-bottom: 8px;">🎓 Verified Campus Community</h3>
+            <p style="font-size: 14px; color: var(--ink-light);">
+              Automated identity verification through official university email ensures every lender and borrower is an active student.
+            </p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h3 style="color: var(--gold-text); margin-bottom: 8px;">🔄 Seamless Request Flow</h3>
+            <p style="font-size: 14px; color: var(--ink-light);">
+              From instant request to campus handover and tracked return, transparent timelines keep everyone on the same page.
+            </p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <h3 style="color: var(--maroon); margin-bottom: 8px;">📊 Business Analytics Track</h3>
+            <p style="font-size: 14px; color: var(--ink-light);">
+              Real-time student dashboard with lending performance metrics, college utilization trends, and item availability stats.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout } from '/js/layout.js';
+    import { getAuthConfig, getGoogleAuthUrl } from '/js/auth.js';
+
+    initLayout();
+
+    // Dynamically show Google sign-in button if enabled
+    getAuthConfig().then(config => {
+      if (config?.googleAuthEnabled) {
+        const googleBtn = document.getElementById('btn-google-landing');
+        if (googleBtn) {
+          googleBtn.classList.remove('hidden');
+          googleBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const url = await getGoogleAuthUrl();
+            if (url) window.location.href = url;
+          });
+        }
+      }
+    }).catch(() => {});
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Confirm Return — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div style="margin-bottom: 20px;">
+      <a href="/my-listings.html" style="font-weight: 700; color: var(--maroon); font-size: 14px;">← Back to My Listings</a>
+    </div>
+
+    <div class="auth-container" style="max-width: 600px;">
+      <div style="margin-bottom: 24px;">
+        <h1 class="page-title" style="font-size: 26px;">Confirm Item Return</h1>
+        <p class="page-subtitle">Verify the condition of your item before restoring it to the catalog</p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-box" class="loading-box">
+        <div class="spinner"></div>
+        <p>Loading return details...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-box" class="hidden" style="background: var(--red-soft); color: var(--red); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px;"></div>
+
+      <div id="return-content" class="hidden">
+        <!-- Item & Borrower Summary Card -->
+        <div style="background: var(--surface-alt); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 16px; margin-bottom: 24px;">
+          <h3 id="item-title" style="color: var(--maroon-dark); font-size: 18px; margin-bottom: 8px;">Item Title</h3>
+          <p style="font-size: 14px; color: var(--ink-light); margin-bottom: 4px;">
+            Borrower: <strong id="borrower-name">Student</strong> (<span id="borrower-college">College</span>)
+          </p>
+          <p style="font-size: 13px; color: var(--muted); margin-bottom: 8px;">
+            Borrowing period: <span id="borrow-dates">Dates</span>
+          </p>
+          <div id="borrower-note-box" style="background: #ffffff; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); font-size: 13px;">
+            <strong style="color: var(--muted);">Borrower Note:</strong> <span id="borrower-note">No note provided.</span>
+          </div>
+        </div>
+
+        <form id="confirm-return-form">
+          <div class="form-group">
+            <label for="return_condition">Returned Item Condition *</label>
+            <select id="return_condition" required>
+              <option value="Like New">Like New (flawless, as lent)</option>
+              <option value="Good" selected>Good (normal use, functional)</option>
+              <option value="Fair">Fair (minor cosmetic wear)</option>
+            </select>
+            <div class="form-help">This will update the item's condition rating for future campus borrowers.</div>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" id="submit-btn" class="btn btn-gold" style="flex: 1;">
+              Confirm Return & Make Item Available
+            </button>
+            <a href="/my-listings.html" class="btn btn-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout, showToast } from '/js/layout.js';
+    import { getMe } from '/js/auth.js';
+    import { getRequest, confirmReturn } from '/js/requests.js';
+
+    await initLayout();
+
+    let currentUser;
+    try {
+      currentUser = await getMe();
+    } catch (e) {
+      throw e;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('id');
+
+    if (!requestId) {
+      window.location.href = '/my-listings.html';
+    }
+
+    const loadingBox = document.getElementById('loading-box');
+    const errorBox = document.getElementById('error-box');
+    const returnContent = document.getElementById('return-content');
+    const form = document.getElementById('confirm-return-form');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let currentRequest = null;
+
+    async function loadRequest() {
+      try {
+        const result = await getRequest(requestId);
+        currentRequest = result.request;
+
+        if (currentRequest.owner_id !== currentUser.id) {
+          showError('You are not authorized to confirm return for this item.');
+          return;
+        }
+
+        loadingBox.classList.add('hidden');
+        returnContent.classList.remove('hidden');
+
+        document.getElementById('item-title').textContent = currentRequest.item?.title || 'Item';
+        document.getElementById('borrower-name').textContent = currentRequest.borrower?.full_name || 'Student';
+        document.getElementById('borrower-college').textContent = currentRequest.borrower?.college || 'Alangilan';
+        document.getElementById('borrow-dates').textContent = `${currentRequest.start_date} to ${currentRequest.due_date}`;
+        document.getElementById('borrower-note').textContent = currentRequest.return_condition || 'No specific return notes.';
+      } catch (err) {
+        showError(err.message || 'Failed to load request details.');
+      }
+    }
+
+    function showError(msg) {
+      loadingBox.classList.add('hidden');
+      errorBox.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Confirming...';
+
+      const condition = document.getElementById('return_condition').value;
+
+      try {
+        await confirmReturn(requestId, condition);
+        showToast('Item return confirmed! Item is now available.', 'success');
+        setTimeout(() => {
+          window.location.href = '/my-listings.html';
+        }, 800);
+      } catch (err) {
+        showError(err.message || 'Failed to confirm return.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirm Return & Make Item Available';
+      }
+    });
+
+    loadRequest();
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Listings & Incoming Requests — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">My Listings & Incoming Requests</h1>
+        <p class="page-subtitle">Manage items you lend and handle borrower requests</p>
+      </div>
+      <div>
+        <a href="/listing-form.html" class="btn btn-gold">+ Post New Item</a>
+      </div>
+    </div>
+
+    <!-- Section 1: Incoming Borrow Requests -->
+    <div class="card" style="margin-bottom: 36px;">
+      <div class="card-body">
+        <h2 style="font-size: 18px; font-weight: 800; color: var(--maroon-dark); margin-bottom: 16px;">
+          📥 Incoming Borrow Requests
+        </h2>
+
+        <div id="incoming-loading" class="loading-box">
+          <div class="spinner"></div>
+          <p>Loading incoming requests...</p>
+        </div>
+
+        <div id="incoming-empty" class="empty-state hidden">
+          <h3>No incoming requests</h3>
+          <p>When students request to borrow your items, their requests will appear here for your review.</p>
+        </div>
+
+        <div class="table-responsive" id="incoming-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Borrower</th>
+                <th>Requested Dates</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="incoming-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: My Listed Items -->
+    <div class="card">
+      <div class="card-body">
+        <h2 style="font-size: 18px; font-weight: 800; color: var(--maroon-dark); margin-bottom: 16px;">
+          📦 My Listed Items
+        </h2>
+
+        <div id="items-loading" class="loading-box">
+          <div class="spinner"></div>
+          <p>Loading your listings...</p>
+        </div>
+
+        <div id="items-empty" class="empty-state hidden">
+          <h3>You haven't listed any items yet</h3>
+          <p>Share equipment, calculators, or study guides with your campus community.</p>
+          <a href="/listing-form.html" class="btn btn-gold btn-sm" style="margin-top: 14px;">+ Post Your First Item</a>
+        </div>
+
+        <div class="table-responsive" id="items-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th>Duration</th>
+                <th>Pickup Spot</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="items-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout, showToast, showModal } from '/js/layout.js';
+    import { getMe } from '/js/auth.js';
+    import { getMyItems, deleteItem, toggleAvailability } from '/js/items.js';
+    import { getIncomingRequests, approveRequest, rejectRequest, confirmPickup, createStatusBadge } from '/js/requests.js';
+
+    await initLayout();
+
+    let currentUser;
+    try {
+      currentUser = await getMe();
+    } catch (e) {
+      throw e;
+    }
+
+    const incomingLoading = document.getElementById('incoming-loading');
+    const incomingEmpty = document.getElementById('incoming-empty');
+    const incomingTbody = document.getElementById('incoming-tbody');
+    const incomingTable = document.getElementById('incoming-table-container');
+
+    const itemsLoading = document.getElementById('items-loading');
+    const itemsEmpty = document.getElementById('items-empty');
+    const itemsTbody = document.getElementById('items-tbody');
+    const itemsTable = document.getElementById('items-table-container');
+
+    async function loadAll() {
+      await Promise.all([loadIncomingRequests(), loadMyItems()]);
+    }
+
+    async function loadIncomingRequests() {
+      incomingLoading.classList.remove('hidden');
+      incomingEmpty.classList.add('hidden');
+      incomingTbody.replaceChildren();
+
+      try {
+        const result = await getIncomingRequests();
+        incomingLoading.classList.add('hidden');
+        const requests = result.requests || [];
+
+        if (requests.length === 0) {
+          incomingEmpty.classList.remove('hidden');
+          incomingTable.classList.add('hidden');
+          return;
+        }
+
+        incomingTable.classList.remove('hidden');
+        requests.forEach(req => {
+          const tr = document.createElement('tr');
+
+          // Item Title
+          const itemTd = document.createElement('td');
+          itemTd.style.fontWeight = '700';
+          itemTd.textContent = req.item?.title || 'Item';
+          tr.appendChild(itemTd);
+
+          // Borrower Info
+          const borrowerTd = document.createElement('td');
+          borrowerTd.textContent = `${req.borrower?.full_name || 'Student'} (${req.borrower?.college || 'Alangilan'})`;
+          tr.appendChild(borrowerTd);
+
+          // Dates
+          const datesTd = document.createElement('td');
+          datesTd.textContent = `${req.start_date} to ${req.due_date}`;
+          tr.appendChild(datesTd);
+
+          // Message
+          const msgTd = document.createElement('td');
+          msgTd.style.maxWidth = '180px';
+          msgTd.style.fontSize = '12px';
+          msgTd.textContent = req.message || '—';
+          tr.appendChild(msgTd);
+
+          // Status Badge
+          const statusTd = document.createElement('td');
+          statusTd.appendChild(createStatusBadge(req.status));
+          tr.appendChild(statusTd);
+
+          // Actions
+          const actionTd = document.createElement('td');
+          actionTd.style.whiteSpace = 'nowrap';
+
+          if (req.status === 'pending') {
+            const approveBtn = document.createElement('button');
+            approveBtn.className = 'btn btn-gold btn-sm';
+            approveBtn.style.marginRight = '6px';
+            approveBtn.textContent = 'Approve';
+            approveBtn.addEventListener('click', async () => {
+              try {
+                await approveRequest(req.id);
+                showToast('Request approved!', 'success');
+                loadAll();
+              } catch (err) {
+                showToast(err.message, 'error');
+              }
+            });
+            actionTd.appendChild(approveBtn);
+
+            const rejectBtn = document.createElement('button');
+            rejectBtn.className = 'btn btn-outline btn-sm';
+            rejectBtn.textContent = 'Reject';
+            rejectBtn.addEventListener('click', () => {
+              showModal({
+                title: 'Reject Request',
+                message: 'Please provide a brief reason for declining this request:',
+                confirmText: 'Reject',
+                isPrompt: true,
+                promptPlaceholder: 'e.g. Item currently unavailable or scheduled conflict...',
+                onConfirm: async (reason) => {
+                  if (!reason || !reason.trim()) {
+                    showToast('Rejection reason is required.', 'error');
+                    return;
+                  }
+                  try {
+                    await rejectRequest(req.id, reason.trim());
+                    showToast('Request rejected.', 'info');
+                    loadAll();
+                  } catch (err) {
+                    showToast(err.message, 'error');
+                  }
+                }
+              });
+            });
+            actionTd.appendChild(rejectBtn);
+          } else if (req.status === 'approved') {
+            const pickupBtn = document.createElement('button');
+            pickupBtn.className = 'btn btn-maroon btn-sm';
+            pickupBtn.textContent = 'Confirm Handover';
+            pickupBtn.addEventListener('click', () => {
+              showModal({
+                title: 'Confirm Item Handover',
+                message: `Confirm that you handed over "${req.item?.title}" to ${req.borrower?.full_name}? The status will change to Borrowed.`,
+                confirmText: 'Confirm Handover',
+                onConfirm: async () => {
+                  try {
+                    await confirmPickup(req.id);
+                    showToast('Item pickup confirmed! Active borrowing started.', 'success');
+                    loadAll();
+                  } catch (err) {
+                    showToast(err.message, 'error');
+                  }
+                }
+              });
+            });
+            actionTd.appendChild(pickupBtn);
+          } else if (req.status === 'return_submitted') {
+            const returnBtn = document.createElement('a');
+            returnBtn.href = `/return.html?id=${req.id}`;
+            returnBtn.className = 'btn btn-gold btn-sm';
+            returnBtn.textContent = 'Confirm Return →';
+            actionTd.appendChild(returnBtn);
+          } else {
+            const span = document.createElement('span');
+            span.style.color = 'var(--muted)';
+            span.style.fontSize = '12px';
+            span.textContent = req.status === 'returned' ? 'Completed' : req.rejection_reason || '—';
+            actionTd.appendChild(span);
+          }
+
+          tr.appendChild(actionTd);
+          incomingTbody.appendChild(tr);
+        });
+      } catch (err) {
+        incomingLoading.classList.add('hidden');
+        showToast('Failed to load incoming requests.', 'error');
+      }
+    }
+
+    async function loadMyItems() {
+      itemsLoading.classList.remove('hidden');
+      itemsEmpty.classList.add('hidden');
+      itemsTbody.replaceChildren();
+
+      try {
+        const result = await getMyItems();
+        itemsLoading.classList.add('hidden');
+        const items = result.items || [];
+
+        if (items.length === 0) {
+          itemsEmpty.classList.remove('hidden');
+          itemsTable.classList.add('hidden');
+          return;
+        }
+
+        itemsTable.classList.remove('hidden');
+        items.forEach(item => {
+          const tr = document.createElement('tr');
+
+          // Title
+          const titleTd = document.createElement('td');
+          const titleLink = document.createElement('a');
+          titleLink.href = `/item.html?id=${item.id}`;
+          titleLink.style.fontWeight = '700';
+          titleLink.style.color = 'var(--maroon-dark)';
+          titleLink.textContent = item.title;
+          titleTd.appendChild(titleLink);
+          tr.appendChild(titleTd);
+
+          // Category
+          const catTd = document.createElement('td');
+          catTd.textContent = item.category;
+          tr.appendChild(catTd);
+
+          // Max days
+          const daysTd = document.createElement('td');
+          daysTd.textContent = `${item.max_borrow_days} days`;
+          tr.appendChild(daysTd);
+
+          // Pickup
+          const spotTd = document.createElement('td');
+          spotTd.textContent = item.pickup_location || 'Campus';
+          tr.appendChild(spotTd);
+
+          // Status Badge
+          const statusTd = document.createElement('td');
+          const badge = document.createElement('span');
+          badge.className = `badge ${item.status === 'available' ? 'badge-green' : 'badge-muted'}`;
+          badge.textContent = item.status;
+          statusTd.appendChild(badge);
+          tr.appendChild(statusTd);
+
+          // Actions
+          const actionTd = document.createElement('td');
+          actionTd.style.whiteSpace = 'nowrap';
+
+          const editBtn = document.createElement('a');
+          editBtn.href = `/listing-form.html?id=${item.id}`;
+          editBtn.className = 'btn btn-secondary btn-sm';
+          editBtn.style.marginRight = '6px';
+          editBtn.textContent = 'Edit';
+          actionTd.appendChild(editBtn);
+
+          const toggleBtn = document.createElement('button');
+          toggleBtn.className = 'btn btn-outline btn-sm';
+          toggleBtn.style.marginRight = '6px';
+          toggleBtn.textContent = item.status === 'available' ? 'Hide' : 'Unhide';
+          if (item.status === 'borrowed') toggleBtn.disabled = true;
+          toggleBtn.addEventListener('click', async () => {
+            try {
+              await toggleAvailability(item.id);
+              showToast('Availability updated.', 'success');
+              loadMyItems();
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
+          });
+          actionTd.appendChild(toggleBtn);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn btn-danger btn-sm';
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.addEventListener('click', () => {
+            showModal({
+              title: 'Delete Item',
+              message: `Permanently delete "${item.title}"?`,
+              confirmText: 'Delete',
+              onConfirm: async () => {
+                try {
+                  await deleteItem(item.id);
+                  showToast('Item deleted.', 'success');
+                  loadMyItems();
+                } catch (err) {
+                  showToast(err.message, 'error');
+                }
+              }
+            });
+          });
+          actionTd.appendChild(deleteBtn);
+
+          tr.appendChild(actionTd);
+          itemsTbody.appendChild(tr);
+        });
+      } catch (err) {
+        itemsLoading.classList.add('hidden');
+        showToast('Failed to load your items.', 'error');
+      }
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
+

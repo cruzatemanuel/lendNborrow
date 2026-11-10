@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post Item — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div class="auth-container" style="max-width: 640px;">
+      <div style="margin-bottom: 24px;">
+        <h1 class="page-title" id="form-heading" style="font-size: 26px;">Post an Item to Lend</h1>
+        <p class="page-subtitle">Share your academic materials and tools with other students</p>
+      </div>
+
+      <!-- Error Alert -->
+      <div id="error-alert" class="hidden" style="background: var(--red-soft); color: var(--red); border: 1px solid var(--red); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px;"></div>
+
+      <form id="item-form">
+        <div class="form-group">
+          <label for="title">Item Title *</label>
+          <input type="text" id="title" required placeholder="e.g. Casio Scientific Calculator FX-991EX" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">Category *</label>
+            <select id="category" required>
+              <option value="">Select Category</option>
+              <option value="Academic & Engineering">Academic & Engineering</option>
+              <option value="Electronics & Gadgets">Electronics & Gadgets</option>
+              <option value="Lab & Workshop">Lab & Workshop</option>
+              <option value="Books & Reviewers">Books & Reviewers</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="condition">Condition</label>
+            <select id="condition">
+              <option value="Like New">Like New</option>
+              <option value="Good" selected>Good</option>
+              <option value="Fair">Fair</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="pickup_location">Pickup Location on Campus *</label>
+            <input type="text" id="pickup_location" required placeholder="e.g. CICS 3rd Floor Lobby or CEAFA Library" />
+          </div>
+          <div class="form-group">
+            <label for="max_borrow_days">Max Borrow Days *</label>
+            <input type="number" id="max_borrow_days" min="1" max="60" value="7" required />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description & Guidelines</label>
+          <textarea id="description" rows="4" placeholder="Mention included accessories, handling instructions, or requirements..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="image">Item Photo (Max 5 MB · JPEG, PNG, WebP)</label>
+          <input type="file" id="image" accept="image/jpeg,image/png,image/webp" />
+          <div id="img-preview-box" class="hidden" style="margin-top: 12px; max-width: 240px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border-light);">
+            <img id="img-preview" src="" alt="Preview" style="width: 100%; height: auto;" />
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button type="submit" id="submit-btn" class="btn btn-gold" style="flex: 1;">
+            Post Listing
+          </button>
+          <a href="/my-listings.html" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout, showToast } from '/js/layout.js';
+    import { getMe } from '/js/auth.js';
+    import { getItem, createItem, updateItem } from '/js/items.js';
+
+    await initLayout();
+
+    let currentUser;
+    try {
+      currentUser = await getMe();
+    } catch (err) {
+      // Handled by api redirect
+      throw err;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('id');
+
+    const form = document.getElementById('item-form');
+    const formHeading = document.getElementById('form-heading');
+    const submitBtn = document.getElementById('submit-btn');
+    const errorAlert = document.getElementById('error-alert');
+    const imageInput = document.getElementById('image');
+    const imgPreviewBox = document.getElementById('img-preview-box');
+    const imgPreview = document.getElementById('img-preview');
+
+    // Live image preview
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          showToast('Image size exceeds 5 MB limit.', 'error');
+          imageInput.value = '';
+          imgPreviewBox.classList.add('hidden');
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imgPreview.src = e.target.result;
+          imgPreviewBox.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        imgPreviewBox.classList.add('hidden');
+      }
+    });
+
+    // Populate if editing
+    if (editId) {
+      formHeading.textContent = 'Edit Item Listing';
+      submitBtn.textContent = 'Save Changes';
+      document.title = 'Edit Item — lendNborrow';
+
+      getItem(editId).then(result => {
+        const item = result.item;
+        if (item.owner_id !== currentUser.id) {
+          showToast('You do not have permission to edit this listing.', 'error');
+          setTimeout(() => window.location.href = '/my-listings.html', 1000);
+          return;
+        }
+
+        document.getElementById('title').value = item.title;
+        document.getElementById('category').value = item.category;
+        document.getElementById('condition').value = item.condition;
+        document.getElementById('pickup_location').value = item.pickup_location;
+        document.getElementById('max_borrow_days').value = item.max_borrow_days;
+        document.getElementById('description').value = item.description || '';
+
+        if (item.image_url) {
+          imgPreview.src = item.image_url;
+          imgPreviewBox.classList.remove('hidden');
+        }
+      }).catch(err => {
+        showToast('Failed to load item for editing.', 'error');
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorAlert.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.textContent = editId ? 'Saving...' : 'Posting...';
+
+      const formData = new FormData();
+      formData.append('title', document.getElementById('title').value.trim());
+      formData.append('category', document.getElementById('category').value);
+      formData.append('condition', document.getElementById('condition').value);
+      formData.append('pickup_location', document.getElementById('pickup_location').value.trim());
+      formData.append('max_borrow_days', document.getElementById('max_borrow_days').value);
+      formData.append('description', document.getElementById('description').value.trim());
+
+      if (imageInput.files[0]) {
+        formData.append('image', imageInput.files[0]);
+      }
+
+      try {
+        if (editId) {
+          await updateItem(editId, formData);
+          showToast('Listing updated successfully!', 'success');
+          setTimeout(() => window.location.href = `/item.html?id=${editId}`, 800);
+        } else {
+          await createItem(formData);
+          showToast('Item posted successfully!', 'success');
+          setTimeout(() => window.location.href = '/my-listings.html', 800);
+        }
+      } catch (err) {
+        errorAlert.textContent = err.message || 'Failed to save item.';
+        errorAlert.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = editId ? 'Save Changes' : 'Post Listing';
+      }
+    });
+  </script>
+</body>
+</html>
+

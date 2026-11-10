@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Items — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Browse Campus Items</h1>
+        <p class="page-subtitle">Find calculators, tools, lab gear, and textbooks to borrow</p>
+      </div>
+      <div>
+        <a href="/listing-form.html" class="btn btn-gold">+ Post an Item</a>
+      </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="card" style="margin-bottom: 24px;">
+      <div class="card-body" style="padding: 16px 20px;">
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+          <div style="flex: 1; min-width: 220px;">
+            <input type="text" id="search-input" placeholder="🔍 Search by title, keyword, or equipment name..." />
+          </div>
+          <div style="min-width: 140px;">
+            <select id="sort-select">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="title_asc">Title (A-Z)</option>
+            </select>
+          </div>
+          <div style="min-width: 140px;">
+            <select id="status-select">
+              <option value="available">Available Only</option>
+              <option value="all">All Items</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category Pills -->
+    <div class="category-pills" id="category-pills">
+      <button class="category-pill active" data-category="All">All Categories</button>
+      <button class="category-pill" data-category="Academic & Engineering">Academic & Engineering</button>
+      <button class="category-pill" data-category="Electronics & Gadgets">Electronics & Gadgets</button>
+      <button class="category-pill" data-category="Lab & Workshop">Lab & Workshop</button>
+      <button class="category-pill" data-category="Books & Reviewers">Books & Reviewers</button>
+      <button class="category-pill" data-category="Other">Other</button>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-box">
+      <div class="spinner"></div>
+      <p>Loading campus listings...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="empty-state hidden">
+      <h3>No items found</h3>
+      <p>Try adjusting your search keywords or selecting another category.</p>
+    </div>
+
+    <!-- Items Grid -->
+    <div class="catalog-grid" id="items-grid"></div>
+
+    <!-- Pagination Controls -->
+    <div id="pagination-controls" style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 36px;" class="hidden">
+      <button id="prev-page-btn" class="btn btn-outline btn-sm">← Previous</button>
+      <span id="page-info" style="font-size: 14px; font-weight: 700; color: var(--muted);">Page 1 of 1</span>
+      <button id="next-page-btn" class="btn btn-outline btn-sm">Next →</button>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout } from '/js/layout.js';
+    import { getItems, createItemCardElement } from '/js/items.js';
+
+    initLayout();
+
+    let currentCategory = 'All';
+    let currentPage = 1;
+    let totalPages = 1;
+
+    const itemsGrid = document.getElementById('items-grid');
+    const loadingState = document.getElementById('loading-state');
+    const emptyState = document.getElementById('empty-state');
+    const paginationControls = document.getElementById('pagination-controls');
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-page-btn');
+    const nextBtn = document.getElementById('next-page-btn');
+    const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
+    const statusSelect = document.getElementById('status-select');
+    const categoryPills = document.querySelectorAll('.category-pill');
+
+    async function loadCatalog() {
+      loadingState.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      itemsGrid.replaceChildren();
+
+      try {
+        const result = await getItems({
+          q: searchInput.value.trim(),
+          category: currentCategory,
+          sort: sortSelect.value,
+          status: statusSelect.value,
+          page: currentPage,
+          limit: 12
+        });
+
+        loadingState.classList.add('hidden');
+
+        const items = result.items || [];
+        const pagination = result.pagination || {};
+        totalPages = pagination.totalPages || 1;
+
+        if (items.length === 0) {
+          emptyState.classList.remove('hidden');
+          paginationControls.classList.add('hidden');
+          return;
+        }
+
+        items.forEach(item => {
+          itemsGrid.appendChild(createItemCardElement(item));
+        });
+
+        // Update pagination
+        if (totalPages > 1) {
+          paginationControls.classList.remove('hidden');
+          pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+          prevBtn.disabled = currentPage <= 1;
+          nextBtn.disabled = currentPage >= totalPages;
+        } else {
+          paginationControls.classList.add('hidden');
+        }
+      } catch (err) {
+        loadingState.classList.add('hidden');
+        emptyState.textContent = 'Failed to load items. ' + (err.message || '');
+        emptyState.classList.remove('hidden');
+      }
+    }
+
+    // Category pill click handler
+    categoryPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        categoryPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        currentCategory = pill.dataset.category;
+        currentPage = 1;
+        loadCatalog();
+      });
+    });
+
+    // Debounced search
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentPage = 1;
+        loadCatalog();
+      }, 350);
+    });
+
+    sortSelect.addEventListener('change', () => {
+      currentPage = 1;
+      loadCatalog();
+    });
+
+    statusSelect.addEventListener('change', () => {
+      currentPage = 1;
+      loadCatalog();
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadCatalog();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadCatalog();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    });
+
+    loadCatalog();
+  </script>
+</body>
+</html>
+

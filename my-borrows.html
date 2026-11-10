@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Borrowed Items & Requests — lendNborrow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="/assets/logo.png">
+  <link rel="stylesheet" href="/css/theme.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="header" class="hdr"></header>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">My Borrows & Requests</h1>
+        <p class="page-subtitle">Track your active borrowings, pending requests, and returns</p>
+      </div>
+      <div>
+        <a href="/browse.html" class="btn btn-gold">Browse Catalog</a>
+      </div>
+    </div>
+
+    <!-- Active Borrowings & Requests Table -->
+    <div class="card">
+      <div class="card-body">
+        <div id="loading-box" class="loading-box">
+          <div class="spinner"></div>
+          <p>Loading your borrowing records...</p>
+        </div>
+
+        <div id="empty-state" class="empty-state hidden">
+          <h3>No borrow requests found</h3>
+          <p>You haven't requested to borrow any items yet.</p>
+          <a href="/browse.html" class="btn btn-gold btn-sm" style="margin-top: 14px;">Browse Available Items</a>
+        </div>
+
+        <div class="table-responsive" id="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Owner</th>
+                <th>Borrow Period</th>
+                <th>Status</th>
+                <th>Notes / Reason</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="borrows-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+
+  <script type="module">
+    import { initLayout, showToast, showModal } from '/js/layout.js';
+    import { getMe } from '/js/auth.js';
+    import { getMyRequests, cancelRequest, submitReturn, createStatusBadge } from '/js/requests.js';
+
+    await initLayout();
+
+    try {
+      await getMe();
+    } catch (e) {
+      throw e;
+    }
+
+    const loadingBox = document.getElementById('loading-box');
+    const emptyState = document.getElementById('empty-state');
+    const tableContainer = document.getElementById('table-container');
+    const tbody = document.getElementById('borrows-tbody');
+
+    async function loadBorrows() {
+      loadingBox.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      tbody.replaceChildren();
+
+      try {
+        const result = await getMyRequests();
+        loadingBox.classList.add('hidden');
+        const requests = result.requests || [];
+
+        if (requests.length === 0) {
+          emptyState.classList.remove('hidden');
+          tableContainer.classList.add('hidden');
+          return;
+        }
+
+        tableContainer.classList.remove('hidden');
+        requests.forEach(req => {
+          const tr = document.createElement('tr');
+
+          // Item Title
+          const itemTd = document.createElement('td');
+          const titleLink = document.createElement('a');
+          titleLink.href = `/item.html?id=${req.item_id}`;
+          titleLink.style.fontWeight = '700';
+          titleLink.style.color = 'var(--maroon-dark)';
+          titleLink.textContent = req.item?.title || 'Item';
+          itemTd.appendChild(titleLink);
+          tr.appendChild(itemTd);
+
+          // Owner
+          const ownerTd = document.createElement('td');
+          ownerTd.textContent = `${req.owner?.full_name || 'Student'} (${req.owner?.college || 'Alangilan'})`;
+          tr.appendChild(ownerTd);
+
+          // Period
+          const periodTd = document.createElement('td');
+          periodTd.textContent = `${req.start_date} → ${req.due_date}`;
+          tr.appendChild(periodTd);
+
+          // Status Badge
+          const statusTd = document.createElement('td');
+          statusTd.appendChild(createStatusBadge(req.status));
+          tr.appendChild(statusTd);
+
+          // Notes / Rejection Reason
+          const notesTd = document.createElement('td');
+          notesTd.style.fontSize = '12px';
+          notesTd.style.color = req.status === 'rejected' ? 'var(--red)' : 'var(--muted)';
+          notesTd.textContent = req.rejection_reason || (req.status === 'borrowing' ? 'Active on campus' : '—');
+          tr.appendChild(notesTd);
+
+          // Actions
+          const actionTd = document.createElement('td');
+          actionTd.style.whiteSpace = 'nowrap';
+
+          if (req.status === 'pending') {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'btn btn-outline btn-sm';
+            cancelBtn.textContent = 'Cancel Request';
+            cancelBtn.addEventListener('click', () => {
+              showModal({
+                title: 'Cancel Request',
+                message: `Are you sure you want to cancel your request for "${req.item?.title}"?`,
+                confirmText: 'Cancel Request',
+                onConfirm: async () => {
+                  try {
+                    await cancelRequest(req.id);
+                    showToast('Request cancelled.', 'info');
+                    loadBorrows();
+                  } catch (err) {
+                    showToast(err.message, 'error');
+                  }
+                }
+              });
+            });
+            actionTd.appendChild(cancelBtn);
+          } else if (req.status === 'borrowing') {
+            const returnBtn = document.createElement('button');
+            returnBtn.className = 'btn btn-gold btn-sm';
+            returnBtn.textContent = 'Return Item';
+            returnBtn.addEventListener('click', () => {
+              showModal({
+                title: 'Initiate Item Return',
+                message: 'Have you handed over the item to the owner on campus? You may add an optional condition note below:',
+                confirmText: 'Submit Return',
+                isPrompt: true,
+                promptPlaceholder: 'e.g. Returned with original charger in good condition.',
+                onConfirm: async (note) => {
+                  try {
+                    await submitReturn(req.id, note);
+                    showToast('Return submitted! Awaiting owner confirmation.', 'success');
+                    loadBorrows();
+                  } catch (err) {
+                    showToast(err.message, 'error');
+                  }
+                }
+              });
+            });
+            actionTd.appendChild(returnBtn);
+          } else if (req.status === 'return_submitted') {
+            const span = document.createElement('span');
+            span.style.fontSize = '12px';
+            span.style.color = 'var(--gold-text)';
+            span.style.fontWeight = '700';
+            span.textContent = '⏳ Awaiting Owner Confirmation';
+            actionTd.appendChild(span);
+          } else {
+            const span = document.createElement('span');
+            span.style.fontSize = '12px';
+            span.style.color = 'var(--muted)';
+            span.textContent = '—';
+            actionTd.appendChild(span);
+          }
+
+          tr.appendChild(actionTd);
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        loadingBox.classList.add('hidden');
+        showToast('Failed to load your borrow requests.', 'error');
+      }
+    }
+
+    loadBorrows();
+  </script>
+</body>
+</html>
+

@@ -1,50 +1,93 @@
 # lendNborrow
 
-A BatStateU community item lending and borrowing web application. Students verify their identity using their official BatStateU GSuite account (`@g.batstate-u.edu.ph`). Verified students can list items, request to borrow, track returns, and view their lending activity. There are no administrator accounts; verification is automated via institutional email.
+A peer-to-peer item lending and borrowing web application designed specifically for BatStateU Alangilan students. Students verify their institutional identity using their official university GSuite account (`@g.batstate-u.edu.ph`). Verified students can list academic tools and equipment, request to borrow items, manage campus handovers, track returns, and view personal and community lending analytics.
 
-## Stack
+---
 
-- Plain HTML, CSS, and vanilla JavaScript ES modules
-- Node.js and Express REST API
-- Supabase Postgres, Auth, and Storage
-- Chart.js for analytics visualizations
+## 🛠️ Stack & Architecture
 
-The browser calls the Express API at `/api`; it does not communicate with Supabase directly. Credentials stay in server-side environment files.
+- **Frontend:** Plain HTML, CSS, and vanilla JavaScript ES modules (no frameworks, no build step).
+- **Backend:** Node.js + Express REST API (serves static client pages and handles `/api/*`).
+- **Database & Auth:** Supabase Postgres, Supabase Auth (institutional email verification), and Supabase Storage (`item-images`).
+- **Visualizations:** Chart.js (via CDN) for Business Analytics (BA) track insights.
+- **Security:** HttpOnly cookies for session storage; service-role key kept server-side; strict domain validation.
 
-## Phase 1 Setup
+The browser communicates exclusively with Express at `/api`. It never talks directly to Supabase and holds no API secrets.
 
-1. Create a Supabase project.
-2. Copy `server/.env.example` to `server/.env`, then add the Supabase URL, anon key, and service-role key.
-3. Install the server dependencies with `npm --prefix server install`.
-4. Run the SQL migrations in `supabase/migrations/` in numeric order, then run `supabase/seed.sql` for local/demo data.
-5. Start the unified application with `npm --prefix server run dev`, then open `http://localhost:3000`.
+---
 
-`GET /api/health` confirms that Express can reach Supabase. Never commit `server/.env`.
+## 📋 Setup & Manual Configuration
 
-## MVP
+All manual configuration steps (Supabase project setup, email whitelist, storage bucket, database migrations, and environment variables) are documented in the setup contract:
 
-- BatStateU GSuite email registration and login (`@g.batstate-u.edu.ph`)
-- Automated student verification via institutional email confirmation
-- Student profile management
-- Create and manage listings
-- Browse and search items
-- Request, approve/reject, pick up, and return items
-- Student dashboard with personal lending metrics
-- Responsive QA and deployment
+👉 **[SETUP_CHECKLIST.md](SETUP_CHECKLIST.md)**
 
-Messages, notifications, Google sign-in (`@g.batstate-u.edu.ph`), ratings, return photos, compensation, and automated credit rules are Phase 6 stretch features.
+---
 
-## Reference
+## 🚀 Quick Start Guide
 
-`docs/Guided_Website/` is the approved visual and interaction reference. It is a prototype only and must not be copied as production logic.
+### 1. Install Dependencies
+```bash
+npm --prefix server install
+```
 
-## Plan
+### 2. Configure Environment
+Copy `server/.env.example` to `server/.env` and supply your Supabase credentials:
+```bash
+cp server/.env.example server/.env
+```
 
-The official scope, architecture, data model, and phased roadmap are in [CONTEXT.md](CONTEXT.md). Course requirements are in `docs/IT_314_Guidelines_Final_Project_2026.md`.
+### 3. Apply Migrations & Seed Demo Data
+In your Supabase SQL Editor, run:
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/migrations/002_functions.sql`
 
+Then run the seed script to create demo users and sample listings:
+```bash
+npm --prefix server run seed
+```
 
-## COMMENTS --
+### 4. Start the Application
+```bash
+# From repository root:
+npm start
 
-November 9 - 1:44 am
+# OR using prefix:
+npm --prefix server run dev
+```
 
-Idk if nasundan ko properly yung plans natin for development pero I started with fixing the placeholder navigation button tsaka sa landing page para may first part done us
+Open your browser to: **`http://localhost:3000`**
+
+---
+
+## 👥 Demo Accounts
+
+The seed script creates three verified student accounts with the password defined in `SEED_DEMO_PASSWORD` (default: `CHANGE_ME_DEMO_PASSWORD`):
+
+| Email | Full Name | College | Role in Demo |
+|---|---|---|---|
+| `demo1@g.batstate-u.edu.ph` | Juan Dela Cruz | CICS | Item Owner (Lender) |
+| `demo2@g.batstate-u.edu.ph` | Maria Santos | CEAFA | Item Borrower |
+| `demo3@g.batstate-u.edu.ph` | Paolo Reyes | CIT | Peer Student |
+
+---
+
+## 🧪 Automated Smoke Test
+
+To verify the complete lending lifecycle against a running server with valid credentials:
+```bash
+npm --prefix server run smoke
+```
+
+---
+
+## ⏱️ 10-Minute Presentation Demo Flow
+
+1. **Landing & Identity Verification:** Open `http://localhost:3000`. Show the institutional GSuite domain restriction (`@g.batstate-u.edu.ph`).
+2. **Catalog Browsing:** Browse items with search, category filtering, and condition badges.
+3. **Borrow Request:** Sign in as `demo2@g.batstate-u.edu.ph` and request to borrow an item listed by `demo1`.
+4. **Owner Review & Mutual Exclusion:** Sign in as `demo1@g.batstate-u.edu.ph` under `my-listings.html`. Approve the request; any other pending requests for the same item are automatically rejected.
+5. **Campus Handover:** Confirm physical pickup (`status: borrowing`). Item changes to `borrowed`.
+6. **Return Submission:** Borrower (`demo2`) navigates to `my-borrows.html` and clicks "Return Item" (`status: return_submitted`).
+7. **Inspection & Return Confirmation:** Owner (`demo1`) confirms receipt on `return.html` with a condition rating (`status: returned`). Item automatically returns to `available`.
+8. **Business Analytics Dashboard:** View personal summary stat cards, recent activity stream, and community chart visualizations (top categories and borrowing activity by college).
