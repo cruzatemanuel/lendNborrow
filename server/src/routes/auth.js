@@ -101,7 +101,7 @@ router.post('/register', requireSupabase, async (req, res) => {
       console.error('Error creating profile record:', profileError.message);
       // Clean up user if profile insertion failed
       await supabaseAdmin.auth.admin.deleteUser(userId);
-      return res.status(500).json({ error: 'Failed to initialize student profile.' });
+      return res.status(500).json({ error: `Failed to initialize student profile: ${profileError.message}` });
     }
 
     return res.status(201).json({
