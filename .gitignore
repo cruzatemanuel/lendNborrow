@@ -1,0 +1,60 @@
+# Node.js
+node_modules/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build outputs
+/dist
+/build
+/.next
+/out
+/coverage
+*.coverage
+
+# Other
+.DS_Store
+*.pem
+
+# Supabase
+.serverless
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+
+# Server-specific ignores
+.serverless*
+.supabase*
+
+# Local development
+.env
+.env.example
+
+# Migrations
+dumps
+
+# Seed data
+seeds/
+
+# Other
+*.orig
+*.bak
+*.rej
