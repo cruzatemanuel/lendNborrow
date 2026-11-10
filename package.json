@@ -4,10 +4,9 @@
   "description": "lendNborrow BatStateU Web App",
   "type": "module",
   "scripts": {
-    "start": "node server/src/app.js",
-    "dev": "node server/src/app.js",
-    "seed": "node server/scripts/seed.js",
-    "smoke": "node server/scripts/smoke-test.js"
+    "start": "npm --prefix server start",
+    "dev": "npm --prefix server run dev",
+    "seed": "npm --prefix server run seed",
+    "smoke": "npm --prefix server run smoke"
   }
 }
-
