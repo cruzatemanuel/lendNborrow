@@ -27,27 +27,34 @@ All manual configuration steps (Supabase project setup, email whitelist, storage
 ## 🚀 Quick Start Guide
 
 ### 1. Install Dependencies
+
 ```bash
 npm --prefix server install
 ```
 
 ### 2. Configure Environment
+
 Copy `server/.env.example` to `server/.env` and supply your Supabase credentials:
+
 ```bash
 cp server/.env.example server/.env
 ```
 
 ### 3. Apply Migrations & Seed Demo Data
+
 In your Supabase SQL Editor, run:
+
 1. `supabase/migrations/001_initial_schema.sql`
 2. `supabase/migrations/002_functions.sql`
 
 Then run the seed script to create demo users and sample listings:
+
 ```bash
 npm --prefix server run seed
 ```
 
 ### 4. Start the Application
+
 ```bash
 # From repository root:
 npm start
@@ -64,17 +71,18 @@ Open your browser to: **`http://localhost:3000`**
 
 The seed script creates three verified student accounts with the password defined in `SEED_DEMO_PASSWORD` (default: `CHANGE_ME_DEMO_PASSWORD`):
 
-| Email | Full Name | College | Role in Demo |
-|---|---|---|---|
-| `demo1@g.batstate-u.edu.ph` | Juan Dela Cruz | CICS | Item Owner (Lender) |
-| `demo2@g.batstate-u.edu.ph` | Maria Santos | CEAFA | Item Borrower |
-| `demo3@g.batstate-u.edu.ph` | Paolo Reyes | CIT | Peer Student |
+| Email                       | Full Name      | College | Role in Demo        |
+| --------------------------- | -------------- | ------- | ------------------- |
+| `demo1@g.batstate-u.edu.ph` | Juan Dela Cruz | CICS    | Item Owner (Lender) |
+| `demo2@g.batstate-u.edu.ph` | Maria Santos   | CEAFA   | Item Borrower       |
+| `demo3@g.batstate-u.edu.ph` | Paolo Reyes    | CIT     | Peer Student        |
 
 ---
 
 ## 🧪 Automated Smoke Test
 
 To verify the complete lending lifecycle against a running server with valid credentials:
+
 ```bash
 npm --prefix server run smoke
 ```
