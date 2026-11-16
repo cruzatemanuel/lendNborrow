@@ -82,14 +82,18 @@ router.get('/me', requireSupabase, requireAuth, async (req, res) => {
 
 /**
  * GET /api/analytics/community
- * Community lending trends for Business Analytics track.
+ * Campus analytics: Top Items by Category and Borrowing Activity by College.
  */
 router.get('/community', requireSupabase, async (req, res) => {
   try {
     // 1. Fetch all items for category distribution
-    const { data: items } = await supabaseAdmin
+    const { data: items, error: itemsError } = await supabaseAdmin
       .from('items')
       .select('id, category, status');
+
+    if (itemsError) {
+      return res.status(400).json({ error: itemsError.message });
+    }
 
     const categoryMap = {};
     (items || []).forEach(item => {
@@ -97,40 +101,22 @@ router.get('/community', requireSupabase, async (req, res) => {
       categoryMap[cat] = (categoryMap[cat] || 0) + 1;
     });
 
-    const categories = Object.entries(categoryMap)
+    const topCategories = Object.entries(categoryMap)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
 
-    // 2. Fetch requests with items and borrower profile for college trends & trending items
-    const { data: requests } = await supabaseAdmin
+    // 2. Fetch requests with borrower profile for college activity breakdown
+    const { data: requests, error: requestsError } = await supabaseAdmin
       .from('borrow_requests')
-      .select('id, item_id, item:items(title, category), borrower:profiles!borrow_requests_borrower_id_fkey(college)');
+      .select('id, borrower:profiles!borrow_requests_borrower_id_fkey(college)');
 
-    // Top trending items by request count
-    const itemRequestMap = {};
-    const itemTitleMap = {};
-    (requests || []).forEach(r => {
-      if (r.item_id) {
-        itemRequestMap[r.item_id] = (itemRequestMap[r.item_id] || 0) + 1;
-        if (r.item?.title) {
-          itemTitleMap[r.item_id] = r.item.title;
-        }
-      }
-    });
+    if (requestsError) {
+      return res.status(400).json({ error: requestsError.message });
+    }
 
-    const trendingItems = Object.entries(itemRequestMap)
-      .map(([itemId, count]) => ({
-        itemId,
-        title: itemTitleMap[itemId] || 'Item',
-        requestsCount: count
-      }))
-      .sort((a, b) => b.requestsCount - a.requestsCount)
-      .slice(0, 5);
-
-    // Borrowing activity by college
     const collegeMap = {};
     (requests || []).forEach(r => {
-      const col = r.borrower?.college || 'Undeclared';
+      const col = r.borrower?.college || 'Unspecified';
       collegeMap[col] = (collegeMap[col] || 0) + 1;
     });
 
@@ -139,8 +125,7 @@ router.get('/community', requireSupabase, async (req, res) => {
       .sort((a, b) => b.count - a.count);
 
     res.json({
-      trendingItems,
-      topCategories: categories,
+      topCategories,
       collegeActivity
     });
   } catch (err) {
@@ -150,4 +135,3 @@ router.get('/community', requireSupabase, async (req, res) => {
 });
 
 export default router;
-

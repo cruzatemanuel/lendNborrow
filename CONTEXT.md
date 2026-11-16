@@ -99,10 +99,6 @@ Compensation endpoints are added only in Phase 6 if that stretch feature is appr
 
 Every protected route verifies the authenticated student and checks item/request ownership on the server. SQL functions handle transactional actions such as approval and return confirmation.
 
-Compensation endpoints are added only in Phase 6 if that stretch feature is approved.
-
-Every protected route verifies the authenticated user and checks ownership or role on the server. SQL functions handle transactional actions such as approval and return confirmation.
-
 ## Revised Development Phases
 
 ### Phase 0.5 — Scope and UI Specification

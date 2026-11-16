@@ -27,7 +27,6 @@ export const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 export const SUPABASE_STORAGE_BUCKET = process.env.SUPABASE_STORAGE_BUCKET || 'item-images';
 export const GOOGLE_AUTH_ENABLED = String(process.env.GOOGLE_AUTH_ENABLED).toLowerCase() === 'true';
-export const SEED_DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD || 'CHANGE_ME_DEMO_PASSWORD';
 
 /**
  * Checks if a string value is an unconfigured placeholder.
@@ -53,9 +52,8 @@ if (isPlaceholder(SUPABASE_SERVICE_ROLE_KEY)) missingVars.push('SUPABASE_SERVICE
 export const isSupabaseConfigured = missingVars.length === 0;
 
 if (!isSupabaseConfigured) {
-  console.warn('\n⚠️  [lendNborrow] WARNING: Supabase is not fully configured.');
-  console.warn(`   Missing or placeholder variables: ${missingVars.join(', ')}`);
-  console.warn('   The server will run in unconfigured mode: static pages are served,');
-  console.warn('   GET /api/health returns 503, and database operations return 503.\n');
+  console.warn('\n[lendNborrow] WARNING: Supabase is not fully configured.');
+  console.warn(`Missing or placeholder variables: ${missingVars.join(', ')}`);
+  console.warn('The server will run in unconfigured mode: static pages are served,');
+  console.warn('GET /api/health returns 503, and database operations return 503.\n');
 }
-

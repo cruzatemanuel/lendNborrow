@@ -6,7 +6,7 @@
   <title>Student Profile — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -15,48 +15,49 @@
   <header id="header" class="hdr"></header>
 
   <main class="main-content">
-    <div class="auth-container" style="max-width: 580px;">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px;">
+    <div class="auth-container auth-container-md">
+      <div class="auth-header-split">
         <div>
-          <h1 class="page-title" style="font-size: 26px;">Student Profile</h1>
-          <p class="page-subtitle">Manage your verified university details</p>
+          <h1 class="page-title">Student Profile</h1>
+          <p class="page-subtitle">Update your university contact and college information</p>
         </div>
-        <span id="verification-badge" class="badge badge-green">Active</span>
+        <span id="verification-badge" class="badge badge-green">Verified</span>
       </div>
 
-      <!-- First time notice -->
-      <div id="first-time-notice" class="hidden" style="background: var(--gold-light); color: var(--gold-text); border: 1px solid var(--gold); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px; font-weight: 600;">
-        👋 Welcome to lendNborrow! Please fill in your student number and college to finish setting up your account.
+      <div id="first-time-notice" class="alert alert-notice hidden">
+        Please enter your student number and college to complete your profile before listing or borrowing items.
       </div>
 
-      <!-- Error Alert -->
-      <div id="error-alert" class="hidden" style="background: var(--red-soft); color: var(--red); border: 1px solid var(--red); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px;"></div>
+      <div id="error-alert" class="alert alert-error hidden"></div>
 
       <form id="profile-form">
         <div class="form-group">
           <label for="email">Institutional GSuite Email</label>
-          <input type="email" id="email" readonly style="background: #F5F5F5;" />
-          <div class="form-help">Linked to your BatStateU authentication. Cannot be modified.</div>
+          <input type="email" id="email" readonly class="input-readonly" />
+          <div class="form-help">Linked to your BatStateU account and cannot be changed.</div>
         </div>
 
         <div class="form-group">
           <label for="full_name">Full Name *</label>
-          <input type="text" id="full_name" required placeholder="Juan Dela Cruz" />
+          <input type="text" id="full_name" required placeholder="Enter your full name" />
         </div>
 
         <div class="form-row">
           <div class="form-group">
             <label for="student_number">Student Number / SR-Code *</label>
-            <input type="text" id="student_number" required placeholder="21-01234" />
+            <input type="text" id="student_number" required placeholder="e.g. 22-00000" />
           </div>
           <div class="form-group">
-            <label for="college">College / Faculty *</label>
+            <label for="college">College *</label>
             <select id="college" required>
               <option value="">Select College</option>
-              <option value="CICS">CICS College of Information and Computing Sciences</option>
-              <option value="CEAFA">COE College of Engineering</option>
-              <option value="CIT">CET College of Engineering Technology</option>
-              <option value="CAFAD">CAFAD College of Fine Arts and Design</option>
+              <option value="CICS">CICS (Informatics & Computing Sciences)</option>
+              <option value="CEAFA">CEAFA (Engineering, Architecture & Fine Arts)</option>
+              <option value="CIT">CIT (Industrial Technology)</option>
+              <option value="CAFAD">CAFAD (Fine Arts & Design)</option>
+              <option value="CABEIHM">CABEIHM (Accountancy, Business & Economics)</option>
+              <option value="CAS">CAS (Arts & Sciences)</option>
+              <option value="CTE">CTE (Teacher Education)</option>
             </select>
           </div>
         </div>
@@ -68,12 +69,12 @@
           </div>
           <div class="form-group">
             <label for="contact">Contact Number</label>
-            <input type="text" id="contact" placeholder="09123456789" />
+            <input type="text" id="contact" placeholder="09XXXXXXXXX" />
           </div>
         </div>
 
-        <button type="submit" id="submit-btn" class="btn btn-gold btn-block" style="margin-top: 10px;">
-          Save Profile Changes
+        <button type="submit" id="submit-btn" class="btn btn-maroon btn-block">
+          Save Profile
         </button>
       </form>
     </div>
@@ -104,7 +105,6 @@
       throw e;
     }
 
-    // Populate fields
     document.getElementById('email').value = currentUser.email || '';
     document.getElementById('full_name').value = currentUser.full_name || '';
     document.getElementById('student_number').value = currentUser.student_number || '';
@@ -112,7 +112,7 @@
     document.getElementById('campus').value = currentUser.campus || 'Alangilan';
     document.getElementById('contact').value = currentUser.contact || '';
 
-    badge.textContent = currentUser.verification_status === 'active' ? 'Active Verified' : 'Pending Verification';
+    badge.textContent = currentUser.verification_status === 'active' ? 'Verified' : 'Pending Confirmation';
     badge.className = `badge ${currentUser.verification_status === 'active' ? 'badge-green' : 'badge-gold'}`;
 
     form.addEventListener('submit', async (e) => {
@@ -136,21 +136,20 @@
           contact
         });
 
-        showToast('Profile updated successfully!', 'success');
+        showToast('Profile saved.', 'success');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Save Profile Changes';
+        submitBtn.textContent = 'Save Profile';
 
         if (urlParams.get('first_time') === '1') {
-          setTimeout(() => window.location.href = '/dashboard.html', 800);
+          setTimeout(() => window.location.href = '/dashboard.html', 600);
         }
       } catch (err) {
         errorAlert.textContent = err.message || 'Failed to update profile.';
         errorAlert.classList.remove('hidden');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Save Profile Changes';
+        submitBtn.textContent = 'Save Profile';
       }
     });
   </script>
 </body>
 </html>
-

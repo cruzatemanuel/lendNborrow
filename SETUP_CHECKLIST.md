@@ -47,10 +47,11 @@ This document is the contract for manual configuration, credentials, Supabase da
   - **Public bucket:** Enabled (Public read access for item image URLs)
   - **File size limit:** 5 MB
   - **Allowed MIME types:** `image/jpeg`, `image/png`, `image/webp`
+- [ ] Or configure/update the bucket automatically by running: `npm run --prefix server configure-bucket`
 
 ---
 
-## 4. Database Migrations
+## 4. Database Migrations & Demo Data Cleanup
 
 Run the SQL migration scripts in order in the **Supabase Dashboard → SQL Editor**:
 
@@ -59,11 +60,11 @@ Run the SQL migration scripts in order in the **Supabase Dashboard → SQL Edito
    - Enforces `@g.batstate-u.edu.ph` email domain validation constraint.
    - Sets up indexes for search, status, and foreign keys.
    - Enables Row Level Security (RLS) on all tables (no public policies; backend uses service-role key).
-   - Configures storage bucket helper entry.
+   - Configures storage bucket entry.
 2. `supabase/migrations/002_functions.sql`
    - Defines atomic SQL functions: `approve_request` and `confirm_return`.
-3. (Optional) `supabase/seed.sql`
-   - Provides direct SQL seed data as reference.
+3. `cleanup_demo_data.sql` (if cleaning an existing database)
+   - Removes any previously seeded demo accounts, sample items, and test borrow requests without affecting schema constraints, triggers, or RLS policies.
 
 ---
 
@@ -84,7 +85,6 @@ Run the SQL migration scripts in order in the **Supabase Dashboard → SQL Edito
   SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
   SUPABASE_STORAGE_BUCKET=item-images
   GOOGLE_AUTH_ENABLED=false
-  SEED_DEMO_PASSWORD=CHANGE_ME_DEMO_PASSWORD
   ```
 
 ---
@@ -95,35 +95,15 @@ Run the SQL migration scripts in order in the **Supabase Dashboard → SQL Edito
 # Install server dependencies
 npm --prefix server install
 
-# Run seed script to create demo users and test data (requires valid Supabase credentials)
-npm --prefix server run seed
-
-# Start development server
-npm --prefix server run dev
-# OR
+# Start server
 npm start
 ```
 
-### Health Check Verification
+### Health Check & Verification
 - Open `http://localhost:3000/api/health`
-- When placeholders are present: returns `503` with `{ ok: false, supabase: "not configured" }` (server stays running).
-- When configured: returns `200` with `{ ok: true, supabase: "connected" }`.
-
----
-
-## 7. Demo Accounts (Created by `npm --prefix server run seed`)
-
-All demo accounts use the password configured in `SEED_DEMO_PASSWORD`:
-1. `demo1@g.batstate-u.edu.ph` — Juan Dela Cruz (CICS, Alangilan)
-2. `demo2@g.batstate-u.edu.ph` — Maria Santos (CEAFA, Alangilan)
-3. `demo3@g.batstate-u.edu.ph` — Paolo Reyes (CIT, Alangilan)
-
----
-
-## 8. Smoke Test
-
-Run the full end-to-end lending lifecycle smoke test:
-```bash
-npm --prefix server run smoke
-```
-
+  - When placeholders are present: returns `503` with `{ ok: false, supabase: "not configured" }`.
+  - When configured: returns `200` with `{ ok: true, supabase: "connected" }`.
+- Run API verification checks:
+  ```bash
+  npm --prefix server run smoke
+  ```

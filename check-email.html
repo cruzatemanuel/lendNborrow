@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Check Your Email — lendNborrow</title>
+  <title>Confirm Your Email — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -15,27 +15,28 @@
   <header id="header" class="hdr"></header>
 
   <main class="main-content">
-    <div class="auth-container" style="text-align: center;">
-      <div style="font-size: 54px; margin-bottom: 16px;">✉️</div>
-      <h1 class="page-title" style="font-size: 26px; margin-bottom: 12px;">Confirm Your Institutional Email</h1>
-      <p style="color: var(--ink-light); font-size: 15px; margin-bottom: 20px;">
-        We sent an automated verification link to your BatStateU GSuite inbox:
-      </p>
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1 class="page-title">Confirm Your University Email</h1>
+        <p class="page-subtitle">
+          A verification link has been sent to your BatStateU GSuite inbox:
+        </p>
+      </div>
 
-      <div style="background: var(--pink); color: var(--maroon-dark); font-weight: 700; padding: 12px; border-radius: var(--radius); margin-bottom: 24px; word-break: break-all;">
+      <div class="email-highlight-box">
         <span id="display-email">your-email@g.batstate-u.edu.ph</span>
       </div>
 
-      <div style="text-align: left; background: #FAF6F5; padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-light); font-size: 13px; color: var(--ink-light); margin-bottom: 24px;">
-        <p style="font-weight: 700; color: var(--maroon-dark); margin-bottom: 6px;">Next steps:</p>
-        <ol style="margin-left: 20px; display: flex; flex-direction: column; gap: 4px;">
-          <li>Open your official BatStateU Google Workspace email.</li>
-          <li>Click the verification link from <strong>lendNborrow</strong>.</li>
-          <li>Return to the sign-in page to start lending and borrowing.</li>
+      <div class="steps-box">
+        <p class="steps-box-title">Next steps:</p>
+        <ol class="steps-list">
+          <li>Open your BatStateU Google Workspace inbox.</li>
+          <li>Follow the confirmation link sent by lendNborrow.</li>
+          <li>Sign in to begin listing or borrowing items.</li>
         </ol>
       </div>
 
-      <a href="/signin.html" class="btn btn-gold btn-block">Go to Sign In</a>
+      <a href="/signin.html" class="btn btn-maroon btn-block">Go to Sign In</a>
     </div>
   </main>
 
@@ -51,4 +52,3 @@
   </script>
 </body>
 </html>
-

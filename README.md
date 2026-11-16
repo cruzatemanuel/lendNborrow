@@ -1,30 +1,30 @@
 # lendNborrow
 
-A peer-to-peer item lending and borrowing web application designed specifically for BatStateU Alangilan students. Students verify their institutional identity using their official university GSuite account (`@g.batstate-u.edu.ph`). Verified students can list academic tools and equipment, request to borrow items, manage campus handovers, track returns, and view personal and community lending analytics.
+A peer-to-peer item lending and borrowing web application for BatStateU Alangilan students. Students verify their institutional identity using their official university GSuite account (`@g.batstate-u.edu.ph`). Verified students can list academic tools and equipment, filter listings by category and college, request to borrow items, manage campus handovers, track returns, and view personal and campus lending analytics.
 
 ---
 
-## 🛠️ Stack & Architecture
+## Stack & Architecture
 
 - **Frontend:** Plain HTML, CSS, and vanilla JavaScript ES modules (no frameworks, no build step).
 - **Backend:** Node.js + Express REST API (serves static client pages and handles `/api/*`).
 - **Database & Auth:** Supabase Postgres, Supabase Auth (institutional email verification), and Supabase Storage (`item-images`).
-- **Visualizations:** Chart.js (via CDN) for Business Analytics (BA) track insights.
-- **Security:** HttpOnly cookies for session storage; service-role key kept server-side; strict domain validation.
+- **Visualizations:** Chart.js (via CDN) for dashboard analytics (**Top Items by Category** and **Borrowing Activity by College**).
+- **Security:** HttpOnly cookies for session storage; service-role key kept server-side; strict `@g.batstate-u.edu.ph` domain validation.
 
 The browser communicates exclusively with Express at `/api`. It never talks directly to Supabase and holds no API secrets.
 
 ---
 
-## 📋 Setup & Manual Configuration
+## Setup & Manual Configuration
 
-All manual configuration steps (Supabase project setup, email whitelist, storage bucket, database migrations, and environment variables) are documented in the setup contract:
+All manual configuration steps (Supabase project setup, email whitelist, storage bucket, database migrations, and environment variables) are documented in:
 
-👉 **[SETUP_CHECKLIST.md](SETUP_CHECKLIST.md)**
+- **[SETUP_CHECKLIST.md](SETUP_CHECKLIST.md)**
 
 ---
 
-## 🚀 Quick Start Guide
+## Quick Start Guide
 
 ### 1. Install Dependencies
 
@@ -40,18 +40,14 @@ Copy `server/.env.example` to `server/.env` and supply your Supabase credentials
 cp server/.env.example server/.env
 ```
 
-### 3. Apply Migrations & Seed Demo Data
+### 3. Apply Database Migrations
 
 In your Supabase SQL Editor, run:
 
 1. `supabase/migrations/001_initial_schema.sql`
 2. `supabase/migrations/002_functions.sql`
 
-Then run the seed script to create demo users and sample listings:
-
-```bash
-npm --prefix server run seed
-```
+If your database previously contained test or seeded demo rows, run `cleanup_demo_data.sql` in the Supabase SQL Editor to remove them cleanly without affecting schema constraints or RLS policies.
 
 ### 4. Start the Application
 
@@ -67,21 +63,9 @@ Open your browser to: **`http://localhost:3000`**
 
 ---
 
-## 👥 Demo Accounts
+## API Verification
 
-The seed script creates three verified student accounts with the password defined in `SEED_DEMO_PASSWORD` (default: `CHANGE_ME_DEMO_PASSWORD`):
-
-| Email                       | Full Name      | College | Role in Demo        |
-| --------------------------- | -------------- | ------- | ------------------- |
-| `demo1@g.batstate-u.edu.ph` | Juan Dela Cruz | CICS    | Item Owner (Lender) |
-| `demo2@g.batstate-u.edu.ph` | Maria Santos   | CEAFA   | Item Borrower       |
-| `demo3@g.batstate-u.edu.ph` | Paolo Reyes    | CIT     | Peer Student        |
-
----
-
-## 🧪 Automated Smoke Test
-
-To verify the complete lending lifecycle against a running server with valid credentials:
+To verify server health, domain enforcement, catalog browsing, and analytics endpoints against a running server:
 
 ```bash
 npm --prefix server run smoke
@@ -89,13 +73,13 @@ npm --prefix server run smoke
 
 ---
 
-## ⏱️ 10-Minute Presentation Demo Flow
+## Core Student Workflow
 
-1. **Landing & Identity Verification:** Open `http://localhost:3000`. Show the institutional GSuite domain restriction (`@g.batstate-u.edu.ph`).
-2. **Catalog Browsing:** Browse items with search, category filtering, and condition badges.
-3. **Borrow Request:** Sign in as `demo2@g.batstate-u.edu.ph` and request to borrow an item listed by `demo1`.
-4. **Owner Review & Mutual Exclusion:** Sign in as `demo1@g.batstate-u.edu.ph` under `my-listings.html`. Approve the request; any other pending requests for the same item are automatically rejected.
-5. **Campus Handover:** Confirm physical pickup (`status: borrowing`). Item changes to `borrowed`.
-6. **Return Submission:** Borrower (`demo2`) navigates to `my-borrows.html` and clicks "Return Item" (`status: return_submitted`).
-7. **Inspection & Return Confirmation:** Owner (`demo1`) confirms receipt on `return.html` with a condition rating (`status: returned`). Item automatically returns to `available`.
-8. **Business Analytics Dashboard:** View personal summary stat cards, recent activity stream, and community chart visualizations (top categories and borrowing activity by college).
+1. **Registration & Verification:** Register with an official BatStateU GSuite email (`@g.batstate-u.edu.ph`) and confirm via the verification link sent to your inbox.
+2. **Catalog Browsing:** Search and filter items by keyword, category, college, and availability on `browse.html`.
+3. **List an Item:** Post calculators, drafting tools, lab gear, or books on `listing-form.html` with a photo, maximum borrow duration, and campus pickup location.
+4. **Borrow Request:** Request to borrow an available item on `item.html` with pickup and return dates.
+5. **Owner Review & Mutual Exclusion:** Review incoming requests on `my-listings.html`. Approving one request automatically declines competing pending requests for that item.
+6. **Campus Handover:** Confirm physical pickup (`status: borrowing`), which marks the item as `borrowed`.
+7. **Return Submission & Confirmation:** The borrower submits a return on `my-borrows.html` (`status: return_submitted`), and the owner confirms the returned item's condition on `return.html` (`status: returned`), restoring the item to `available`.
+8. **Student Dashboard:** View personal summary cards, recent borrowing history, activity feed, and the two live campus charts (**Top Items by Category** and **Borrowing Activity by College**).

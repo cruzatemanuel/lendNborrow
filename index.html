@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>lendNborrow — Borrow what you need. Lend what you don't.</title>
-  <meta name="description" content="Peer-to-peer item lending platform for BatStateU Alangilan students." />
+  <title>lendNborrow — BatStateU Alangilan Item Lending & Borrowing</title>
+  <meta name="description" content="Student equipment, calculator, and book lending utility for BatStateU Alangilan." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -18,59 +18,111 @@
   <main class="main-content">
     <section class="landing-hero" aria-labelledby="landing-heading">
       <div class="landing-copy">
-        <span class="landing-eyebrow">BatStateU Alangilan · Students Only</span>
-        <h1 id="landing-heading"><span>Borrow what you need.</span> Lend what you don't.</h1>
+        <span class="landing-eyebrow">BatStateU Alangilan Campus Utility</span>
+        <h1 id="landing-heading">Borrow academic tools. <span>Lend idle equipment.</span></h1>
         <p class="landing-description">
-          Share calculators, drafting tools, lab equipment, and textbooks with fellow Red Spartans.
-          Safe, verified, and completely free on campus.
+          Find calculators, drafting tools, laboratory instruments, and course references listed by students across Alangilan colleges, or list your own items for campus pickup.
         </p>
 
         <div class="landing-actions">
-          <a href="/browse.html" class="btn btn-gold">Browse Catalog</a>
-          <a href="/signup.html" class="btn btn-outline">Create Account</a>
+          <a href="/browse.html" class="btn btn-maroon">Browse Catalog</a>
+          <a href="/listing-form.html" class="btn btn-outline">List an Item</a>
+          <a href="/signup.html" id="btn-signup-landing" class="btn btn-secondary">Create Account</a>
           <a id="btn-google-landing" href="#" class="btn btn-secondary hidden">
             <span>Sign in with Google</span>
           </a>
         </div>
 
         <p class="landing-note">
-          🔒 Restricted to official BatStateU GSuite accounts (<code style="color: var(--maroon);">@g.batstate-u.edu.ph</code>).
+          Access requires an official BatStateU GSuite email (<code>@g.batstate-u.edu.ph</code>).
         </p>
       </div>
 
-      <div class="landing-art">
-        <img src="/assets/logo.png" alt="lendNborrow emblem" />
-        <p class="landing-tagline">LEND. <span>BORROW.</span> CONNECT.</p>
+      <div class="landing-utility-panel">
+        <h2 class="landing-utility-title">Find an Item on Campus</h2>
+        <p class="landing-utility-sub">Filter listings by keyword, category, or college</p>
+        <form id="quick-search-form">
+          <div class="form-group">
+            <label for="quick-q">Keyword or Item Name</label>
+            <input type="text" id="quick-q" placeholder="e.g. scientific calculator, T-square, multimeter" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="quick-category">Category</label>
+              <select id="quick-category">
+                <option value="All">All Categories</option>
+                <option value="Academic & Engineering">Academic & Engineering</option>
+                <option value="Electronics & Gadgets">Electronics & Gadgets</option>
+                <option value="Lab & Workshop">Lab & Workshop</option>
+                <option value="Books & Reviewers">Books & Reviewers</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="quick-college">College</label>
+              <select id="quick-college">
+                <option value="All">All Colleges</option>
+                <option value="CICS">CICS</option>
+                <option value="CEAFA">CEAFA</option>
+                <option value="CIT">CIT</option>
+                <option value="CAFAD">CAFAD</option>
+                <option value="CABEIHM">CABEIHM</option>
+                <option value="CAS">CAS</option>
+                <option value="CTE">CTE</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-maroon btn-block">Search Listings</button>
+        </form>
       </div>
     </section>
 
-    <!-- Value Highlights Grid -->
-    <section style="margin-top: 48px;">
-      <div class="stat-panel-grid">
-        <div class="card">
-          <div class="card-body">
-            <h3 style="color: var(--maroon); margin-bottom: 8px;">🎓 Verified Campus Community</h3>
-            <p style="font-size: 14px; color: var(--ink-light);">
-              Automated identity verification through official university email ensures every lender and borrower is an active student.
-            </p>
-          </div>
+    <section class="section-block" aria-labelledby="recent-heading">
+      <div class="card-header-row">
+        <div>
+          <h2 id="recent-heading" class="section-title">Available Campus Listings</h2>
+          <p class="page-subtitle">Items currently open for borrow requests</p>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h3 style="color: var(--gold-text); margin-bottom: 8px;">🔄 Seamless Request Flow</h3>
-            <p style="font-size: 14px; color: var(--ink-light);">
-              From instant request to campus handover and tracked return, transparent timelines keep everyone on the same page.
-            </p>
-          </div>
+        <a href="/browse.html" class="link-action">View Full Catalog</a>
+      </div>
+
+      <div id="landing-loading" class="loading-box">
+        <div class="spinner"></div>
+        <p>Loading available listings...</p>
+      </div>
+
+      <div id="landing-empty" class="empty-state hidden">
+        <h3>No items listed yet</h3>
+        <p>Post the first item for your college so other students can request to borrow it.</p>
+        <div class="empty-state-actions">
+          <a href="/listing-form.html" class="btn btn-maroon btn-sm">List an Item</a>
+          <a href="/browse.html" class="btn btn-outline btn-sm">Open Catalog</a>
         </div>
-        <div class="card">
-          <div class="card-body">
-            <h3 style="color: var(--maroon); margin-bottom: 8px;">📊 Business Analytics Track</h3>
-            <p style="font-size: 14px; color: var(--ink-light);">
-              Real-time student dashboard with lending performance metrics, college utilization trends, and item availability stats.
-            </p>
-          </div>
-        </div>
+      </div>
+
+      <div id="landing-items-grid" class="catalog-grid"></div>
+    </section>
+
+    <section class="guidelines-grid" aria-label="How campus lending works">
+      <div class="guideline-card">
+        <span class="guideline-step">Step 1</span>
+        <h3>Verify University Email</h3>
+        <p>Register and confirm your <code>@g.batstate-u.edu.ph</code> email address to activate your student profile.</p>
+      </div>
+      <div class="guideline-card">
+        <span class="guideline-step">Step 2</span>
+        <h3>Browse or List Items</h3>
+        <p>Filter available items by category and college, or post tools and books with your preferred pickup spot.</p>
+      </div>
+      <div class="guideline-card">
+        <span class="guideline-step">Step 3</span>
+        <h3>Request & Handover</h3>
+        <p>Select your pickup and return dates. Once approved by the owner, meet on campus to confirm handover.</p>
+      </div>
+      <div class="guideline-card">
+        <span class="guideline-step">Step 4</span>
+        <h3>Return & Confirm</h3>
+        <p>Submit the return by the due date. The owner inspects the item condition and restores it to the catalog.</p>
       </div>
     </section>
   </main>
@@ -80,8 +132,48 @@
   <script type="module">
     import { initLayout } from '/js/layout.js';
     import { getAuthConfig, getGoogleAuthUrl } from '/js/auth.js';
+    import { getItems, createItemCardElement } from '/js/items.js';
 
     initLayout();
+
+    // Quick search form handler
+    const quickForm = document.getElementById('quick-search-form');
+    quickForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const params = new URLSearchParams();
+      const q = document.getElementById('quick-q').value.trim();
+      const category = document.getElementById('quick-category').value;
+      const college = document.getElementById('quick-college').value;
+
+      if (q) params.set('q', q);
+      if (category && category !== 'All') params.set('category', category);
+      if (college && college !== 'All') params.set('college', college);
+
+      const qs = params.toString();
+      window.location.href = `/browse.html${qs ? `?${qs}` : ''}`;
+    });
+
+    // Load live preview of available items
+    const loadingEl = document.getElementById('landing-loading');
+    const emptyEl = document.getElementById('landing-empty');
+    const gridEl = document.getElementById('landing-items-grid');
+
+    getItems({ status: 'available', limit: 4 })
+      .then(result => {
+        loadingEl.classList.add('hidden');
+        const items = result.items || [];
+        if (items.length === 0) {
+          emptyEl.classList.remove('hidden');
+          return;
+        }
+        items.forEach(item => {
+          gridEl.appendChild(createItemCardElement(item));
+        });
+      })
+      .catch(() => {
+        loadingEl.classList.add('hidden');
+        emptyEl.classList.remove('hidden');
+      });
 
     // Dynamically show Google sign-in button if enabled
     getAuthConfig().then(config => {
@@ -100,4 +192,3 @@
   </script>
 </body>
 </html>
-

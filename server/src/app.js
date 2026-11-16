@@ -77,8 +77,8 @@ app.use((err, req, res, next) => {
 // Boot server if executed directly
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    console.log(`\n🚀 lendNborrow server running at http://localhost:${PORT}`);
-    console.log(`   Health check endpoint: http://localhost:${PORT}/api/health\n`);
+    console.log(`\nlendNborrow server running at http://localhost:${PORT}`);
+    console.log(`Health check endpoint: http://localhost:${PORT}/api/health\n`);
   });
 }
 

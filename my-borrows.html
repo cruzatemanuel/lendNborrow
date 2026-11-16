@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Borrowed Items & Requests — lendNborrow</title>
+  <title>My Borrowed Items — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -17,15 +17,14 @@
   <main class="main-content">
     <div class="page-header">
       <div>
-        <h1 class="page-title">My Borrows & Requests</h1>
-        <p class="page-subtitle">Track your active borrowings, pending requests, and returns</p>
+        <h1 class="page-title">My Borrowed Items</h1>
+        <p class="page-subtitle">Track your outgoing borrow requests, active loans, and item returns</p>
       </div>
-      <div>
-        <a href="/browse.html" class="btn btn-gold">Browse Catalog</a>
+      <div class="page-actions">
+        <a href="/browse.html" class="btn btn-maroon">Browse Catalog</a>
       </div>
     </div>
 
-    <!-- Active Borrowings & Requests Table -->
     <div class="card">
       <div class="card-body">
         <div id="loading-box" class="loading-box">
@@ -34,12 +33,14 @@
         </div>
 
         <div id="empty-state" class="empty-state hidden">
-          <h3>No borrow requests found</h3>
-          <p>You haven't requested to borrow any items yet.</p>
-          <a href="/browse.html" class="btn btn-gold btn-sm" style="margin-top: 14px;">Browse Available Items</a>
+          <h3>No borrow requests yet</h3>
+          <p>You have no active or past borrow requests. Browse the catalog to find equipment or books for your courses.</p>
+          <div class="empty-state-actions">
+            <a href="/browse.html" class="btn btn-maroon btn-sm">Browse Catalog</a>
+          </div>
         </div>
 
-        <div class="table-responsive" id="table-container">
+        <div class="table-responsive hidden" id="table-container">
           <table>
             <thead>
               <tr>
@@ -47,7 +48,7 @@
                 <th>Owner</th>
                 <th>Borrow Period</th>
                 <th>Status</th>
-                <th>Notes / Reason</th>
+                <th>Notes</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -98,41 +99,33 @@
         requests.forEach(req => {
           const tr = document.createElement('tr');
 
-          // Item Title
           const itemTd = document.createElement('td');
           const titleLink = document.createElement('a');
           titleLink.href = `/item.html?id=${req.item_id}`;
-          titleLink.style.fontWeight = '700';
-          titleLink.style.color = 'var(--maroon-dark)';
+          titleLink.className = 'td-link';
           titleLink.textContent = req.item?.title || 'Item';
           itemTd.appendChild(titleLink);
           tr.appendChild(itemTd);
 
-          // Owner
           const ownerTd = document.createElement('td');
           ownerTd.textContent = `${req.owner?.full_name || 'Student'} (${req.owner?.college || 'Alangilan'})`;
           tr.appendChild(ownerTd);
 
-          // Period
           const periodTd = document.createElement('td');
-          periodTd.textContent = `${req.start_date} → ${req.due_date}`;
+          periodTd.textContent = `${req.start_date} to ${req.due_date}`;
           tr.appendChild(periodTd);
 
-          // Status Badge
           const statusTd = document.createElement('td');
           statusTd.appendChild(createStatusBadge(req.status));
           tr.appendChild(statusTd);
 
-          // Notes / Rejection Reason
           const notesTd = document.createElement('td');
-          notesTd.style.fontSize = '12px';
-          notesTd.style.color = req.status === 'rejected' ? 'var(--red)' : 'var(--muted)';
-          notesTd.textContent = req.rejection_reason || (req.status === 'borrowing' ? 'Active on campus' : '—');
+          notesTd.className = req.status === 'rejected' ? 'td-note-rejected' : 'td-note';
+          notesTd.textContent = req.rejection_reason || (req.status === 'borrowing' ? 'On loan' : '—');
           tr.appendChild(notesTd);
 
-          // Actions
           const actionTd = document.createElement('td');
-          actionTd.style.whiteSpace = 'nowrap';
+          actionTd.className = 'td-actions';
 
           if (req.status === 'pending') {
             const cancelBtn = document.createElement('button');
@@ -141,7 +134,7 @@
             cancelBtn.addEventListener('click', () => {
               showModal({
                 title: 'Cancel Request',
-                message: `Are you sure you want to cancel your request for "${req.item?.title}"?`,
+                message: `Cancel your pending borrow request for "${req.item?.title}"?`,
                 confirmText: 'Cancel Request',
                 onConfirm: async () => {
                   try {
@@ -157,19 +150,19 @@
             actionTd.appendChild(cancelBtn);
           } else if (req.status === 'borrowing') {
             const returnBtn = document.createElement('button');
-            returnBtn.className = 'btn btn-gold btn-sm';
+            returnBtn.className = 'btn btn-maroon btn-sm';
             returnBtn.textContent = 'Return Item';
             returnBtn.addEventListener('click', () => {
               showModal({
-                title: 'Initiate Item Return',
-                message: 'Have you handed over the item to the owner on campus? You may add an optional condition note below:',
+                title: 'Submit Item Return',
+                message: 'Confirm that you have returned the item to the owner on campus. Add an optional condition note:',
                 confirmText: 'Submit Return',
                 isPrompt: true,
-                promptPlaceholder: 'e.g. Returned with original charger in good condition.',
+                promptPlaceholder: 'e.g. Returned complete with case at CICS lobby.',
                 onConfirm: async (note) => {
                   try {
                     await submitReturn(req.id, note);
-                    showToast('Return submitted! Awaiting owner confirmation.', 'success');
+                    showToast('Return submitted. Awaiting owner confirmation.', 'success');
                     loadBorrows();
                   } catch (err) {
                     showToast(err.message, 'error');
@@ -180,15 +173,12 @@
             actionTd.appendChild(returnBtn);
           } else if (req.status === 'return_submitted') {
             const span = document.createElement('span');
-            span.style.fontSize = '12px';
-            span.style.color = 'var(--gold-text)';
-            span.style.fontWeight = '700';
-            span.textContent = '⏳ Awaiting Owner Confirmation';
+            span.className = 'status-note';
+            span.textContent = 'Awaiting Owner Confirmation';
             actionTd.appendChild(span);
           } else {
             const span = document.createElement('span');
-            span.style.fontSize = '12px';
-            span.style.color = 'var(--muted)';
+            span.className = 'td-note';
             span.textContent = '—';
             actionTd.appendChild(span);
           }
@@ -206,4 +196,3 @@
   </script>
 </body>
 </html>
-

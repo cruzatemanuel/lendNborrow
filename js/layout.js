@@ -21,7 +21,6 @@ export async function initLayout() {
 
   const currentPath = window.location.pathname;
 
-  // Header markup structure
   header.className = 'hdr';
   header.replaceChildren();
 
@@ -37,7 +36,12 @@ export async function initLayout() {
 
   const brandText = document.createElement('span');
   brandText.className = 'text';
-  brandText.innerHTML = 'lend<span class="accent">N</span>borrow';
+  brandText.append('lend');
+  const accentSpan = document.createElement('span');
+  accentSpan.className = 'accent';
+  accentSpan.textContent = 'N';
+  brandText.appendChild(accentSpan);
+  brandText.append('borrow');
   brandLink.appendChild(brandText);
 
   header.appendChild(brandLink);
@@ -46,7 +50,7 @@ export async function initLayout() {
   const toggleBtn = document.createElement('button');
   toggleBtn.className = 'nav-toggle';
   toggleBtn.setAttribute('aria-label', 'Toggle Navigation');
-  toggleBtn.textContent = '☰';
+  toggleBtn.textContent = 'Menu';
   header.appendChild(toggleBtn);
 
   // 3. Navigation Links
@@ -61,15 +65,15 @@ export async function initLayout() {
 
   if (currentUser) {
     links.push({ href: '/dashboard.html', text: 'Dashboard' });
-    links.push({ href: '/browse.html', text: 'Browse Items' });
+    links.push({ href: '/browse.html', text: 'Browse Catalog' });
     links.push({ href: '/my-listings.html', text: 'My Listings' });
-    links.push({ href: '/my-borrows.html', text: 'My Borrows' });
+    links.push({ href: '/my-borrows.html', text: 'My Borrowed Items' });
     links.push({ href: '/profile.html', text: 'Profile' });
   } else {
     links.push({ href: '/', text: 'Home' });
-    links.push({ href: '/browse.html', text: 'Browse' });
+    links.push({ href: '/browse.html', text: 'Browse Catalog' });
     links.push({ href: '/signin.html', text: 'Sign In' });
-    links.push({ href: '/signup.html', text: 'Sign Up' });
+    links.push({ href: '/signup.html', text: 'Create Account' });
   }
 
   links.forEach(l => {
@@ -87,15 +91,15 @@ export async function initLayout() {
 
   header.appendChild(nav);
 
-  // 4. Header Right (Post Item Button & User/Auth Actions)
+  // 4. Header Right (List an Item Button & User/Auth Actions)
   const rightSection = document.createElement('div');
   rightSection.className = 'hdr-right';
 
   if (currentUser) {
     const postBtn = document.createElement('a');
     postBtn.href = '/listing-form.html';
-    postBtn.className = 'btn btn-gold btn-sm';
-    postBtn.textContent = '+ Post Item';
+    postBtn.className = 'btn btn-hdr-cta btn-sm';
+    postBtn.textContent = 'List an Item';
     rightSection.appendChild(postBtn);
 
     const userPill = document.createElement('div');
@@ -113,9 +117,7 @@ export async function initLayout() {
     rightSection.appendChild(userPill);
 
     const logoutBtn = document.createElement('button');
-    logoutBtn.className = 'btn btn-sm btn-outline';
-    logoutBtn.style.color = '#ffffff';
-    logoutBtn.style.borderColor = 'rgba(255,255,255,0.4)';
+    logoutBtn.className = 'btn btn-sm btn-hdr-outline';
     logoutBtn.textContent = 'Sign Out';
     logoutBtn.addEventListener('click', async () => {
       await logout();
@@ -124,8 +126,8 @@ export async function initLayout() {
   } else {
     const postBtn = document.createElement('a');
     postBtn.href = '/signin.html';
-    postBtn.className = 'btn btn-gold btn-sm';
-    postBtn.textContent = '+ Post Item';
+    postBtn.className = 'btn btn-hdr-cta btn-sm';
+    postBtn.textContent = 'List an Item';
     rightSection.appendChild(postBtn);
   }
 
@@ -155,7 +157,6 @@ export function showToast(message, type = 'info') {
 
 /**
  * Custom accessible Modal dialog replacing prompt() and confirm().
- * Styled consistently with the Guided Website reference.
  */
 export function showModal({
   title = 'Confirmation',
@@ -183,7 +184,8 @@ export function showModal({
 
   const closeBtn = document.createElement('button');
   closeBtn.className = 'modal-close';
-  closeBtn.innerHTML = '&times;';
+  closeBtn.textContent = '×';
+  closeBtn.setAttribute('aria-label', 'Close dialog');
   closeBtn.addEventListener('click', () => backdrop.remove());
   header.appendChild(closeBtn);
   modal.appendChild(header);
@@ -194,7 +196,7 @@ export function showModal({
 
   if (message) {
     const msgP = document.createElement('p');
-    msgP.style.marginBottom = isPrompt ? '14px' : '0';
+    msgP.className = isPrompt ? 'modal-intro' : '';
     msgP.textContent = message;
     body.appendChild(msgP);
   }
@@ -237,4 +239,3 @@ export function showModal({
     promptInput.focus();
   }
 }
-

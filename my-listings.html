@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Listings & Incoming Requests — lendNborrow</title>
+  <title>My Listings & Pending Approvals — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -17,20 +17,19 @@
   <main class="main-content">
     <div class="page-header">
       <div>
-        <h1 class="page-title">My Listings & Incoming Requests</h1>
-        <p class="page-subtitle">Manage items you lend and handle borrower requests</p>
+        <h1 class="page-title">My Listings & Pending Approvals</h1>
+        <p class="page-subtitle">Manage your listed items, review incoming borrow requests, and confirm handovers</p>
       </div>
-      <div>
-        <a href="/listing-form.html" class="btn btn-gold">+ Post New Item</a>
+      <div class="page-actions">
+        <a href="/listing-form.html" class="btn btn-maroon">List an Item</a>
       </div>
     </div>
 
-    <!-- Section 1: Incoming Borrow Requests -->
-    <div class="card" style="margin-bottom: 36px;">
+    <div class="card section-block">
       <div class="card-body">
-        <h2 style="font-size: 18px; font-weight: 800; color: var(--maroon-dark); margin-bottom: 16px;">
-          📥 Incoming Borrow Requests
-        </h2>
+        <div class="card-header-row">
+          <h2 class="section-title">Incoming Borrow Requests</h2>
+        </div>
 
         <div id="incoming-loading" class="loading-box">
           <div class="spinner"></div>
@@ -39,10 +38,10 @@
 
         <div id="incoming-empty" class="empty-state hidden">
           <h3>No incoming requests</h3>
-          <p>When students request to borrow your items, their requests will appear here for your review.</p>
+          <p>Requests from students who want to borrow your items will appear here.</p>
         </div>
 
-        <div class="table-responsive" id="incoming-table-container">
+        <div class="table-responsive hidden" id="incoming-table-container">
           <table>
             <thead>
               <tr>
@@ -60,12 +59,11 @@
       </div>
     </div>
 
-    <!-- Section 2: My Listed Items -->
     <div class="card">
       <div class="card-body">
-        <h2 style="font-size: 18px; font-weight: 800; color: var(--maroon-dark); margin-bottom: 16px;">
-          📦 My Listed Items
-        </h2>
+        <div class="card-header-row">
+          <h2 class="section-title">My Listed Items</h2>
+        </div>
 
         <div id="items-loading" class="loading-box">
           <div class="spinner"></div>
@@ -73,19 +71,21 @@
         </div>
 
         <div id="items-empty" class="empty-state hidden">
-          <h3>You haven't listed any items yet</h3>
-          <p>Share equipment, calculators, or study guides with your campus community.</p>
-          <a href="/listing-form.html" class="btn btn-gold btn-sm" style="margin-top: 14px;">+ Post Your First Item</a>
+          <h3>No items listed yet</h3>
+          <p>Post the first item for your college so fellow students can request to borrow it.</p>
+          <div class="empty-state-actions">
+            <a href="/listing-form.html" class="btn btn-maroon btn-sm">List an Item</a>
+          </div>
         </div>
 
-        <div class="table-responsive" id="items-table-container">
+        <div class="table-responsive hidden" id="items-table-container">
           <table>
             <thead>
               <tr>
                 <th>Item</th>
                 <th>Category</th>
-                <th>Duration</th>
-                <th>Pickup Spot</th>
+                <th>Max Duration</th>
+                <th>Pickup Location</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -103,13 +103,18 @@
     import { initLayout, showToast, showModal } from '/js/layout.js';
     import { getMe } from '/js/auth.js';
     import { getMyItems, deleteItem, toggleAvailability } from '/js/items.js';
-    import { getIncomingRequests, approveRequest, rejectRequest, confirmPickup, createStatusBadge } from '/js/requests.js';
+    import {
+      getIncomingRequests,
+      approveRequest,
+      rejectRequest,
+      confirmPickup,
+      createStatusBadge
+    } from '/js/requests.js';
 
     await initLayout();
 
-    let currentUser;
     try {
-      currentUser = await getMe();
+      await getMe();
     } catch (e) {
       throw e;
     }
@@ -148,47 +153,39 @@
         requests.forEach(req => {
           const tr = document.createElement('tr');
 
-          // Item Title
           const itemTd = document.createElement('td');
-          itemTd.style.fontWeight = '700';
+          itemTd.className = 'td-title';
           itemTd.textContent = req.item?.title || 'Item';
           tr.appendChild(itemTd);
 
-          // Borrower Info
           const borrowerTd = document.createElement('td');
           borrowerTd.textContent = `${req.borrower?.full_name || 'Student'} (${req.borrower?.college || 'Alangilan'})`;
           tr.appendChild(borrowerTd);
 
-          // Dates
           const datesTd = document.createElement('td');
           datesTd.textContent = `${req.start_date} to ${req.due_date}`;
           tr.appendChild(datesTd);
 
-          // Message
           const msgTd = document.createElement('td');
-          msgTd.style.maxWidth = '180px';
-          msgTd.style.fontSize = '12px';
+          msgTd.className = 'td-note';
           msgTd.textContent = req.message || '—';
           tr.appendChild(msgTd);
 
-          // Status Badge
           const statusTd = document.createElement('td');
           statusTd.appendChild(createStatusBadge(req.status));
           tr.appendChild(statusTd);
 
-          // Actions
           const actionTd = document.createElement('td');
-          actionTd.style.whiteSpace = 'nowrap';
+          actionTd.className = 'td-actions';
 
           if (req.status === 'pending') {
             const approveBtn = document.createElement('button');
-            approveBtn.className = 'btn btn-gold btn-sm';
-            approveBtn.style.marginRight = '6px';
+            approveBtn.className = 'btn btn-maroon btn-sm';
             approveBtn.textContent = 'Approve';
             approveBtn.addEventListener('click', async () => {
               try {
                 await approveRequest(req.id);
-                showToast('Request approved!', 'success');
+                showToast('Request approved.', 'success');
                 loadAll();
               } catch (err) {
                 showToast(err.message, 'error');
@@ -198,22 +195,22 @@
 
             const rejectBtn = document.createElement('button');
             rejectBtn.className = 'btn btn-outline btn-sm';
-            rejectBtn.textContent = 'Reject';
+            rejectBtn.textContent = 'Decline';
             rejectBtn.addEventListener('click', () => {
               showModal({
-                title: 'Reject Request',
-                message: 'Please provide a brief reason for declining this request:',
-                confirmText: 'Reject',
+                title: 'Decline Request',
+                message: 'Provide a brief reason for declining this request:',
+                confirmText: 'Decline',
                 isPrompt: true,
-                promptPlaceholder: 'e.g. Item currently unavailable or scheduled conflict...',
+                promptPlaceholder: 'e.g. Scheduled conflict or item needed for lab exam...',
                 onConfirm: async (reason) => {
                   if (!reason || !reason.trim()) {
-                    showToast('Rejection reason is required.', 'error');
+                    showToast('A reason is required to decline a request.', 'error');
                     return;
                   }
                   try {
                     await rejectRequest(req.id, reason.trim());
-                    showToast('Request rejected.', 'info');
+                    showToast('Request declined.', 'info');
                     loadAll();
                   } catch (err) {
                     showToast(err.message, 'error');
@@ -228,13 +225,13 @@
             pickupBtn.textContent = 'Confirm Handover';
             pickupBtn.addEventListener('click', () => {
               showModal({
-                title: 'Confirm Item Handover',
-                message: `Confirm that you handed over "${req.item?.title}" to ${req.borrower?.full_name}? The status will change to Borrowed.`,
+                title: 'Confirm Handover',
+                message: `Confirm that you handed over "${req.item?.title}" to ${req.borrower?.full_name}?`,
                 confirmText: 'Confirm Handover',
                 onConfirm: async () => {
                   try {
                     await confirmPickup(req.id);
-                    showToast('Item pickup confirmed! Active borrowing started.', 'success');
+                    showToast('Pickup confirmed.', 'success');
                     loadAll();
                   } catch (err) {
                     showToast(err.message, 'error');
@@ -246,13 +243,12 @@
           } else if (req.status === 'return_submitted') {
             const returnBtn = document.createElement('a');
             returnBtn.href = `/return.html?id=${req.id}`;
-            returnBtn.className = 'btn btn-gold btn-sm';
-            returnBtn.textContent = 'Confirm Return →';
+            returnBtn.className = 'btn btn-maroon btn-sm';
+            returnBtn.textContent = 'Confirm Return';
             actionTd.appendChild(returnBtn);
           } else {
             const span = document.createElement('span');
-            span.style.color = 'var(--muted)';
-            span.style.fontSize = '12px';
+            span.className = 'td-note';
             span.textContent = req.status === 'returned' ? 'Completed' : req.rejection_reason || '—';
             actionTd.appendChild(span);
           }
@@ -286,32 +282,26 @@
         items.forEach(item => {
           const tr = document.createElement('tr');
 
-          // Title
           const titleTd = document.createElement('td');
           const titleLink = document.createElement('a');
           titleLink.href = `/item.html?id=${item.id}`;
-          titleLink.style.fontWeight = '700';
-          titleLink.style.color = 'var(--maroon-dark)';
+          titleLink.className = 'td-link';
           titleLink.textContent = item.title;
           titleTd.appendChild(titleLink);
           tr.appendChild(titleTd);
 
-          // Category
           const catTd = document.createElement('td');
           catTd.textContent = item.category;
           tr.appendChild(catTd);
 
-          // Max days
           const daysTd = document.createElement('td');
           daysTd.textContent = `${item.max_borrow_days} days`;
           tr.appendChild(daysTd);
 
-          // Pickup
           const spotTd = document.createElement('td');
           spotTd.textContent = item.pickup_location || 'Campus';
           tr.appendChild(spotTd);
 
-          // Status Badge
           const statusTd = document.createElement('td');
           const badge = document.createElement('span');
           badge.className = `badge ${item.status === 'available' ? 'badge-green' : 'badge-muted'}`;
@@ -319,21 +309,18 @@
           statusTd.appendChild(badge);
           tr.appendChild(statusTd);
 
-          // Actions
           const actionTd = document.createElement('td');
-          actionTd.style.whiteSpace = 'nowrap';
+          actionTd.className = 'td-actions';
 
           const editBtn = document.createElement('a');
           editBtn.href = `/listing-form.html?id=${item.id}`;
           editBtn.className = 'btn btn-secondary btn-sm';
-          editBtn.style.marginRight = '6px';
           editBtn.textContent = 'Edit';
           actionTd.appendChild(editBtn);
 
           const toggleBtn = document.createElement('button');
           toggleBtn.className = 'btn btn-outline btn-sm';
-          toggleBtn.style.marginRight = '6px';
-          toggleBtn.textContent = item.status === 'available' ? 'Hide' : 'Unhide';
+          toggleBtn.textContent = item.status === 'available' ? 'Set Unavailable' : 'Set Available';
           if (item.status === 'borrowed') toggleBtn.disabled = true;
           toggleBtn.addEventListener('click', async () => {
             try {
@@ -372,7 +359,7 @@
         });
       } catch (err) {
         itemsLoading.classList.add('hidden');
-        showToast('Failed to load your items.', 'error');
+        showToast('Failed to load your listings.', 'error');
       }
     }
 
@@ -380,4 +367,3 @@
   </script>
 </body>
 </html>
-
