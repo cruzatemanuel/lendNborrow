@@ -1,9 +1,14 @@
 // ========================================================
 // lendNborrow: Analytics Service & Visualizations
-// Integrates personal dashboard metrics and Chart.js for BA track
+// Renders personal summary stats and the two campus charts:
+// 1. Top Items by Category
+// 2. Borrowing Activity by College
 // ========================================================
 
 import { api } from './api.js';
+
+let categoriesChartInstance = null;
+let collegesChartInstance = null;
 
 export async function getMyAnalytics() {
   return await api.get('/analytics/me');
@@ -14,7 +19,7 @@ export async function getCommunityAnalytics() {
 }
 
 /**
- * Updates the 4 gold-header dashboard stat cards.
+ * Updates the 4 personal dashboard summary cards.
  */
 export function renderStatCards(stats = {}) {
   const activeEl = document.getElementById('stat-active-listings');
@@ -29,7 +34,7 @@ export function renderStatCards(stats = {}) {
 }
 
 /**
- * Renders recent activity items in the blush sidebar.
+ * Renders recent activity items in the activity sidebar.
  */
 export function renderActivityFeed(container, activities = []) {
   if (!container) return;
@@ -38,7 +43,7 @@ export function renderActivityFeed(container, activities = []) {
   if (!activities || activities.length === 0) {
     const emptyP = document.createElement('p');
     emptyP.className = 'form-help';
-    emptyP.textContent = 'No recent activity yet.';
+    emptyP.textContent = 'No lending or borrowing activity recorded yet.';
     container.appendChild(emptyP);
     return;
   }
@@ -59,22 +64,22 @@ export function renderActivityFeed(container, activities = []) {
         actionText = `Request approved for "${itemTitle}"`;
         break;
       case 'borrowing':
-        actionText = `Handover completed: "${itemTitle}" is now borrowed`;
+        actionText = `Handover confirmed: "${itemTitle}" is out on loan`;
         break;
       case 'return_submitted':
-        actionText = `Return submitted for "${itemTitle}"`;
+        actionText = `Return initiated for "${itemTitle}"`;
         break;
       case 'returned':
         actionText = `Return confirmed for "${itemTitle}"`;
         break;
       case 'rejected':
-        actionText = `Request rejected for "${itemTitle}"`;
+        actionText = `Request declined for "${itemTitle}"`;
         break;
       case 'cancelled':
         actionText = `Request cancelled for "${itemTitle}"`;
         break;
       default:
-        actionText = `Status update on "${itemTitle}": ${act.status}`;
+        actionText = `Status updated on "${itemTitle}": ${act.status}`;
     }
 
     descSpan.textContent = actionText;
@@ -96,72 +101,130 @@ export function renderActivityFeed(container, activities = []) {
 }
 
 /**
- * Initializes community analytics charts with Chart.js (via CDN).
+ * Helper to show or clear an empty-state message inside a chart wrapper.
  */
-export function initCommunityCharts(data) {
-  if (typeof Chart === 'undefined') {
-    console.warn('Chart.js CDN not loaded.');
-    return;
-  }
+function setChartEmptyState(canvasEl, message) {
+  if (!canvasEl || !canvasEl.parentElement) return;
+  const wrapper = canvasEl.parentElement;
 
-  // 1. Categories Chart (Bar or Doughnut)
-  const categoryCanvas = document.getElementById('chart-categories');
-  if (categoryCanvas && data.topCategories?.length > 0) {
-    const labels = data.topCategories.map(c => c.name);
-    const counts = data.topCategories.map(c => c.count);
+  const existingMsg = wrapper.querySelector('.chart-empty');
+  if (existingMsg) existingMsg.remove();
 
-    new Chart(categoryCanvas, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data: counts,
-          backgroundColor: [
-            '#8E1B24',
-            '#E4A62E',
-            '#2E7D57',
-            '#1D63B8',
-            '#A33A41',
-            '#9A6B00'
-          ]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom' }
-        }
-      }
-    });
-  }
-
-  // 2. College Activity Chart
-  const collegeCanvas = document.getElementById('chart-colleges');
-  if (collegeCanvas && data.collegeActivity?.length > 0) {
-    const labels = data.collegeActivity.map(c => c.college);
-    const counts = data.collegeActivity.map(c => c.count);
-
-    new Chart(collegeCanvas, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Borrowing Activity by College',
-          data: counts,
-          backgroundColor: '#8E1B24',
-          borderRadius: 4
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true, ticks: { precision: 0 } }
-        },
-        plugins: {
-          legend: { display: false }
-        }
-      }
-    });
+  if (message) {
+    canvasEl.classList.add('hidden');
+    const emptyEl = document.createElement('p');
+    emptyEl.className = 'chart-empty';
+    emptyEl.textContent = message;
+    wrapper.appendChild(emptyEl);
+  } else {
+    canvasEl.classList.remove('hidden');
   }
 }
 
+/**
+ * Initializes the two community analytics charts from live Supabase data:
+ * 1. Top Items by Category
+ * 2. Borrowing Activity by College
+ */
+export function initCommunityCharts(data = {}) {
+  const categoryCanvas = document.getElementById('chart-categories');
+  const collegeCanvas = document.getElementById('chart-colleges');
+
+  if (categoriesChartInstance) {
+    categoriesChartInstance.destroy();
+    categoriesChartInstance = null;
+  }
+  if (collegesChartInstance) {
+    collegesChartInstance.destroy();
+    collegesChartInstance = null;
+  }
+
+  const topCategories = Array.isArray(data.topCategories) ? data.topCategories : [];
+  const collegeActivity = Array.isArray(data.collegeActivity) ? data.collegeActivity : [];
+
+  // 1. Top Items by Category
+  if (categoryCanvas) {
+    if (topCategories.length === 0) {
+      setChartEmptyState(categoryCanvas, 'No items listed yet. Category counts will appear once listings are posted.');
+    } else if (typeof Chart === 'undefined') {
+      setChartEmptyState(categoryCanvas, 'Chart visualization library could not be loaded.');
+    } else {
+      setChartEmptyState(categoryCanvas, null);
+      const labels = topCategories.map(c => c.name);
+      const counts = topCategories.map(c => c.count);
+
+      categoriesChartInstance = new Chart(categoryCanvas, {
+        type: 'doughnut',
+        data: {
+          labels,
+          datasets: [{
+            data: counts,
+            backgroundColor: [
+              '#8B1E24',
+              '#C88A1E',
+              '#334155',
+              '#1D4ED8',
+              '#15803D',
+              '#64748B'
+            ],
+            borderWidth: 1,
+            borderColor: '#FFFFFF'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                font: { size: 12 }
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+
+  // 2. Borrowing Activity by College
+  if (collegeCanvas) {
+    if (collegeActivity.length === 0) {
+      setChartEmptyState(collegeCanvas, 'No borrowing transactions recorded across colleges yet.');
+    } else if (typeof Chart === 'undefined') {
+      setChartEmptyState(collegeCanvas, 'Chart visualization library could not be loaded.');
+    } else {
+      setChartEmptyState(collegeCanvas, null);
+      const labels = collegeActivity.map(c => c.college);
+      const counts = collegeActivity.map(c => c.count);
+
+      collegesChartInstance = new Chart(collegeCanvas, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Borrow Requests',
+            data: counts,
+            backgroundColor: '#8B1E24',
+            borderRadius: 4,
+            maxBarThickness: 44
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+  }
+}

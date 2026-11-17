@@ -6,11 +6,10 @@
   <title>Dashboard — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
-  <!-- Chart.js CDN for BA track analytics -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -20,59 +19,56 @@
     <div class="page-header">
       <div>
         <h1 class="page-title">Student Dashboard</h1>
-        <p class="page-subtitle" id="welcome-msg">Welcome to your campus lending & borrowing hub</p>
+        <p class="page-subtitle" id="welcome-msg">Manage your listed items, active loans, and pending requests</p>
       </div>
-      <div style="display: flex; gap: 10px;">
-        <a href="/listing-form.html" class="btn btn-gold">+ Post an Item</a>
-        <a href="/browse.html" class="btn btn-maroon">Browse Catalog</a>
+      <div class="page-actions">
+        <a href="/listing-form.html" class="btn btn-maroon">List an Item</a>
+        <a href="/browse.html" class="btn btn-outline">Browse Catalog</a>
       </div>
     </div>
 
-    <!-- 4 Gold-Header Stat Cards -->
     <div class="stat-panel-grid">
       <div class="stat-card">
         <div class="stat-card-hdr">Active Listings</div>
         <div class="stat-card-body">
-          <div class="stat-value" id="stat-active-listings">-</div>
-          <div class="stat-desc">items available to lend</div>
+          <div class="stat-value" id="stat-active-listings">0</div>
+          <div class="stat-desc">available to lend</div>
         </div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-card-hdr">Items I'm Borrowing</div>
+        <div class="stat-card-hdr">My Borrowed Items</div>
         <div class="stat-card-body">
-          <div class="stat-value" id="stat-items-borrowing">-</div>
-          <div class="stat-desc">currently in your possession</div>
+          <div class="stat-value" id="stat-items-borrowing">0</div>
+          <div class="stat-desc">currently on loan</div>
         </div>
       </div>
 
       <div class="stat-card">
-        <div class="stat-card-hdr">Pending Requests</div>
+        <div class="stat-card-hdr">Pending Approvals</div>
         <div class="stat-card-body">
-          <div class="stat-value" id="stat-pending-requests">-</div>
-          <div class="stat-desc">awaiting confirmation</div>
+          <div class="stat-value" id="stat-pending-requests">0</div>
+          <div class="stat-desc">awaiting response</div>
         </div>
       </div>
 
       <div class="stat-card">
         <div class="stat-card-hdr">Completed Returns</div>
         <div class="stat-card-body">
-          <div class="stat-value" id="stat-completed-returns">-</div>
-          <div class="stat-desc">successful item exchanges</div>
+          <div class="stat-value" id="stat-completed-returns">0</div>
+          <div class="stat-desc">returned on campus</div>
         </div>
       </div>
     </div>
 
-    <!-- Dashboard Main Grid: Content + Blush Activity Sidebar -->
     <div class="dashboard-grid">
-      <div style="display: flex; flex-direction: column; gap: 32px;">
+      <div class="dashboard-main-col">
 
-        <!-- Personal Borrowing History Section -->
         <div class="card">
           <div class="card-body">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <h2 style="font-size: 18px; font-weight: 800; color: var(--maroon-dark);">Recent Borrowing History</h2>
-              <a href="/my-borrows.html" style="font-size: 13px; font-weight: 700; color: var(--maroon);">View All →</a>
+            <div class="card-header-row">
+              <h2 class="section-title">Recent Borrowing History</h2>
+              <a href="/my-borrows.html" class="link-action">View All</a>
             </div>
 
             <div class="table-responsive">
@@ -87,7 +83,7 @@
                 </thead>
                 <tbody id="history-tbody">
                   <tr>
-                    <td colspan="4" style="text-align: center; color: var(--muted); padding: 24px;">Loading borrowing history...</td>
+                    <td colspan="4" class="table-empty-cell">Loading borrowing history...</td>
                   </tr>
                 </tbody>
               </table>
@@ -95,51 +91,39 @@
           </div>
         </div>
 
-        <!-- Community Analytics (Business Analytics track) -->
         <div class="card">
           <div class="card-body">
-            <h2 style="font-size: 18px; font-weight: 800; color: var(--maroon-dark); margin-bottom: 6px;">
-              Campus Community Analytics
-            </h2>
-            <p style="font-size: 13px; color: var(--muted); margin-bottom: 24px;">
-              BatStateU Alangilan item utilization and borrowing activity across colleges
+            <h2 class="section-title">Campus Lending Analytics</h2>
+            <p class="section-subtitle">
+              Live category breakdown and borrowing activity across BatStateU Alangilan colleges
             </p>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-              <div style="background: var(--surface-alt); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-light);">
-                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--ink);">Top Item Categories</h4>
-                <div style="height: 220px; position: relative;">
+            <div class="analytics-grid">
+              <div class="analytics-card">
+                <h3 class="analytics-card-title">Top Items by Category</h3>
+                <div class="analytics-chart-box">
                   <canvas id="chart-categories"></canvas>
                 </div>
               </div>
 
-              <div style="background: var(--surface-alt); padding: 16px; border-radius: var(--radius); border: 1px solid var(--border-light);">
-                <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--ink);">Borrowing Activity by College</h4>
-                <div style="height: 220px; position: relative;">
+              <div class="analytics-card">
+                <h3 class="analytics-card-title">Borrowing Activity by College</h3>
+                <div class="analytics-chart-box">
                   <canvas id="chart-colleges"></canvas>
                 </div>
               </div>
-            </div>
-
-            <!-- Trending Items List -->
-            <div style="margin-top: 24px;">
-              <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--ink);">🔥 Trending Borrowed Items</h4>
-              <ul id="trending-list" style="list-style: none; display: flex; flex-direction: column; gap: 8px;">
-                <li style="font-size: 13px; color: var(--muted);">Loading trending items...</li>
-              </ul>
             </div>
           </div>
         </div>
 
       </div>
 
-      <!-- Right Blush Sidebar: Recent Activity Feed -->
       <aside class="sidebar-blush">
         <h3 class="sidebar-title">Recent Activity</h3>
         <div id="activity-container" class="activity-list">
-          <div class="loading-box" style="padding: 24px 0;">
+          <div class="loading-box">
             <div class="spinner"></div>
-            <p style="font-size: 12px;">Loading activity...</p>
+            <p>Loading activity...</p>
           </div>
         </div>
       </aside>
@@ -151,7 +135,13 @@
   <script type="module">
     import { initLayout } from '/js/layout.js';
     import { getMe } from '/js/auth.js';
-    import { getMyAnalytics, getCommunityAnalytics, renderStatCards, renderActivityFeed, initCommunityCharts } from '/js/analytics.js';
+    import {
+      getMyAnalytics,
+      getCommunityAnalytics,
+      renderStatCards,
+      renderActivityFeed,
+      initCommunityCharts
+    } from '/js/analytics.js';
     import { createStatusBadge } from '/js/requests.js';
 
     async function loadDashboard() {
@@ -161,20 +151,19 @@
       try {
         user = await getMe();
       } catch (err) {
-        return; // Redirected by api.js
+        return;
       }
 
       if (user?.full_name) {
-        document.getElementById('welcome-msg').textContent = `Hello, ${user.full_name} (${user.college || 'Alangilan'})`;
+        document.getElementById('welcome-msg').textContent =
+          `${user.full_name} · ${user.college || 'Alangilan Campus'}`;
       }
 
-      // 1. Fetch personal analytics
       try {
         const myData = await getMyAnalytics();
         renderStatCards(myData.stats);
         renderActivityFeed(document.getElementById('activity-container'), myData.recentActivity);
 
-        // Populate borrowing history table
         const tbody = document.getElementById('history-tbody');
         tbody.replaceChildren();
 
@@ -182,10 +171,8 @@
           const tr = document.createElement('tr');
           const td = document.createElement('td');
           td.colSpan = 4;
-          td.style.textAlign = 'center';
-          td.style.color = 'var(--muted)';
-          td.style.padding = '24px';
-          td.textContent = 'No borrow history yet. Browse the catalog to find items you need!';
+          td.className = 'table-empty-cell';
+          td.textContent = 'No borrowing records yet. Browse the catalog to request an item.';
           tr.appendChild(td);
           tbody.appendChild(tr);
         } else {
@@ -193,7 +180,7 @@
             const tr = document.createElement('tr');
 
             const itemTd = document.createElement('td');
-            itemTd.style.fontWeight = '700';
+            itemTd.className = 'td-title';
             itemTd.textContent = req.item?.title || 'Item';
             tr.appendChild(itemTd);
 
@@ -202,7 +189,7 @@
             tr.appendChild(ownerTd);
 
             const dueTd = document.createElement('td');
-            dueTd.textContent = req.due_date || '-';
+            dueTd.textContent = req.due_date || '—';
             tr.appendChild(dueTd);
 
             const statusTd = document.createElement('td');
@@ -214,48 +201,16 @@
         }
       } catch (err) {
         console.error('Error loading personal analytics:', err);
+        renderStatCards({});
+        renderActivityFeed(document.getElementById('activity-container'), []);
       }
 
-      // 2. Fetch community analytics
       try {
         const commData = await getCommunityAnalytics();
         initCommunityCharts(commData);
-
-        const trendingList = document.getElementById('trending-list');
-        trendingList.replaceChildren();
-
-        if (!commData.trendingItems || commData.trendingItems.length === 0) {
-          const li = document.createElement('li');
-          li.style.fontSize = '13px';
-          li.style.color = 'var(--muted)';
-          li.textContent = 'No item borrow data recorded yet.';
-          trendingList.appendChild(li);
-        } else {
-          commData.trendingItems.forEach((item, idx) => {
-            const li = document.createElement('li');
-            li.style.display = 'flex';
-            li.style.justifyContent = 'space-between';
-            li.style.fontSize = '13px';
-            li.style.padding = '6px 10px';
-            li.style.background = '#ffffff';
-            li.style.borderRadius = 'var(--radius-sm)';
-            li.style.border = '1px solid var(--border-light)';
-
-            const spanTitle = document.createElement('span');
-            spanTitle.textContent = `${idx + 1}. ${item.title}`;
-            li.appendChild(spanTitle);
-
-            const spanCount = document.createElement('span');
-            spanCount.style.fontWeight = '700';
-            spanCount.style.color = 'var(--maroon)';
-            spanCount.textContent = `${item.requestsCount} borrow requests`;
-            li.appendChild(spanCount);
-
-            trendingList.appendChild(li);
-          });
-        }
       } catch (err) {
         console.error('Error loading community analytics:', err);
+        initCommunityCharts({ topCategories: [], collegeActivity: [] });
       }
     }
 
@@ -263,4 +218,3 @@
   </script>
 </body>
 </html>
-

@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Post Item — lendNborrow</title>
+  <title>List an Item — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -15,19 +15,18 @@
   <header id="header" class="hdr"></header>
 
   <main class="main-content">
-    <div class="auth-container" style="max-width: 640px;">
-      <div style="margin-bottom: 24px;">
-        <h1 class="page-title" id="form-heading" style="font-size: 26px;">Post an Item to Lend</h1>
-        <p class="page-subtitle">Share your academic materials and tools with other students</p>
+    <div class="auth-container auth-container-lg">
+      <div class="auth-header-left">
+        <h1 class="page-title" id="form-heading">List an Item</h1>
+        <p class="page-subtitle">Provide item details, maximum borrow duration, and campus pickup location</p>
       </div>
 
-      <!-- Error Alert -->
-      <div id="error-alert" class="hidden" style="background: var(--red-soft); color: var(--red); border: 1px solid var(--red); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px;"></div>
+      <div id="error-alert" class="alert alert-error hidden"></div>
 
       <form id="item-form">
         <div class="form-group">
           <label for="title">Item Title *</label>
-          <input type="text" id="title" required placeholder="e.g. Casio Scientific Calculator FX-991EX" />
+          <input type="text" id="title" required placeholder="e.g. Casio FX-991EX Scientific Calculator" />
         </div>
 
         <div class="form-row">
@@ -54,7 +53,7 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="pickup_location">Pickup Location on Campus *</label>
+            <label for="pickup_location">Campus Pickup Location *</label>
             <input type="text" id="pickup_location" required placeholder="e.g. CICS 3rd Floor Lobby or CEAFA Library" />
           </div>
           <div class="form-group">
@@ -64,21 +63,21 @@
         </div>
 
         <div class="form-group">
-          <label for="description">Description & Guidelines</label>
-          <textarea id="description" rows="4" placeholder="Mention included accessories, handling instructions, or requirements..."></textarea>
+          <label for="description">Description & Borrowing Notes</label>
+          <textarea id="description" rows="4" placeholder="Include accessories, care instructions, or available handover hours..."></textarea>
         </div>
 
         <div class="form-group">
           <label for="image">Item Photo (Max 5 MB · JPEG, PNG, WebP)</label>
           <input type="file" id="image" accept="image/jpeg,image/png,image/webp" />
-          <div id="img-preview-box" class="hidden" style="margin-top: 12px; max-width: 240px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border-light);">
-            <img id="img-preview" src="" alt="Preview" style="width: 100%; height: auto;" />
+          <div id="img-preview-box" class="img-preview-container hidden">
+            <img id="img-preview" src="" alt="Selected item preview" />
           </div>
         </div>
 
-        <div style="display: flex; gap: 12px; margin-top: 24px;">
-          <button type="submit" id="submit-btn" class="btn btn-gold" style="flex: 1;">
-            Post Listing
+        <div class="form-actions">
+          <button type="submit" id="submit-btn" class="btn btn-maroon btn-primary-flex">
+            Publish Listing
           </button>
           <a href="/my-listings.html" class="btn btn-secondary">Cancel</a>
         </div>
@@ -99,7 +98,6 @@
     try {
       currentUser = await getMe();
     } catch (err) {
-      // Handled by api redirect
       throw err;
     }
 
@@ -114,12 +112,11 @@
     const imgPreviewBox = document.getElementById('img-preview-box');
     const imgPreview = document.getElementById('img-preview');
 
-    // Live image preview
     imageInput.addEventListener('change', () => {
       const file = imageInput.files[0];
       if (file) {
         if (file.size > 5 * 1024 * 1024) {
-          showToast('Image size exceeds 5 MB limit.', 'error');
+          showToast('Image size exceeds the 5 MB limit.', 'error');
           imageInput.value = '';
           imgPreviewBox.classList.add('hidden');
           return;
@@ -135,17 +132,16 @@
       }
     });
 
-    // Populate if editing
     if (editId) {
-      formHeading.textContent = 'Edit Item Listing';
+      formHeading.textContent = 'Edit Listing';
       submitBtn.textContent = 'Save Changes';
-      document.title = 'Edit Item — lendNborrow';
+      document.title = 'Edit Listing — lendNborrow';
 
       getItem(editId).then(result => {
         const item = result.item;
         if (item.owner_id !== currentUser.id) {
           showToast('You do not have permission to edit this listing.', 'error');
-          setTimeout(() => window.location.href = '/my-listings.html', 1000);
+          setTimeout(() => window.location.href = '/my-listings.html', 800);
           return;
         }
 
@@ -160,8 +156,8 @@
           imgPreview.src = item.image_url;
           imgPreviewBox.classList.remove('hidden');
         }
-      }).catch(err => {
-        showToast('Failed to load item for editing.', 'error');
+      }).catch(() => {
+        showToast('Failed to load item details.', 'error');
       });
     }
 
@@ -169,7 +165,7 @@
       e.preventDefault();
       errorAlert.classList.add('hidden');
       submitBtn.disabled = true;
-      submitBtn.textContent = editId ? 'Saving...' : 'Posting...';
+      submitBtn.textContent = editId ? 'Saving...' : 'Publishing...';
 
       const formData = new FormData();
       formData.append('title', document.getElementById('title').value.trim());
@@ -186,21 +182,20 @@
       try {
         if (editId) {
           await updateItem(editId, formData);
-          showToast('Listing updated successfully!', 'success');
-          setTimeout(() => window.location.href = `/item.html?id=${editId}`, 800);
+          showToast('Listing updated.', 'success');
+          setTimeout(() => window.location.href = `/item.html?id=${editId}`, 600);
         } else {
           await createItem(formData);
-          showToast('Item posted successfully!', 'success');
-          setTimeout(() => window.location.href = '/my-listings.html', 800);
+          showToast('Item listed.', 'success');
+          setTimeout(() => window.location.href = '/my-listings.html', 600);
         }
       } catch (err) {
-        errorAlert.textContent = err.message || 'Failed to save item.';
+        errorAlert.textContent = err.message || 'Failed to save listing.';
         errorAlert.classList.remove('hidden');
         submitBtn.disabled = false;
-        submitBtn.textContent = editId ? 'Save Changes' : 'Post Listing';
+        submitBtn.textContent = editId ? 'Save Changes' : 'Publish Listing';
       }
     });
   </script>
 </body>
 </html>
-

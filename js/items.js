@@ -9,6 +9,7 @@ export async function getItems(params = {}) {
   const query = new URLSearchParams();
   if (params.q) query.set('q', params.q);
   if (params.category && params.category !== 'All') query.set('category', params.category);
+  if (params.college && params.college !== 'All' && params.college !== 'all') query.set('college', params.college);
   if (params.status) query.set('status', params.status);
   if (params.sort) query.set('sort', params.sort);
   if (params.page) query.set('page', params.page);
@@ -50,7 +51,7 @@ export function createItemCardElement(item) {
   const card = document.createElement('div');
   card.className = 'item-card';
 
-  // Image or placeholder
+  // Image or neutral placeholder
   const imgContainer = document.createElement('div');
   imgContainer.className = 'item-card-img';
 
@@ -61,7 +62,7 @@ export function createItemCardElement(item) {
     img.loading = 'lazy';
     imgContainer.appendChild(img);
   } else {
-    imgContainer.textContent = '📦';
+    imgContainer.textContent = 'No Photo';
   }
   card.appendChild(imgContainer);
 
@@ -74,7 +75,7 @@ export function createItemCardElement(item) {
 
   const catBadge = document.createElement('span');
   catBadge.className = 'badge badge-maroon';
-  catBadge.textContent = item.category || 'Item';
+  catBadge.textContent = item.category || 'General';
   badgeRow.appendChild(catBadge);
 
   const statusBadge = document.createElement('span');
@@ -95,11 +96,11 @@ export function createItemCardElement(item) {
   meta.className = 'item-card-meta';
 
   const collegeP = document.createElement('span');
-  collegeP.textContent = `📍 ${item.owner?.college || 'Alangilan'} · ${item.pickup_location || 'Campus'}`;
+  collegeP.textContent = `${item.owner?.college || 'Alangilan'} · ${item.pickup_location || 'Campus'}`;
   meta.appendChild(collegeP);
 
   const durationP = document.createElement('span');
-  durationP.textContent = `⏱️ Max ${item.max_borrow_days} days · Condition: ${item.condition}`;
+  durationP.textContent = `Max ${item.max_borrow_days} days · Condition: ${item.condition}`;
   meta.appendChild(durationP);
 
   body.appendChild(meta);
@@ -110,8 +111,8 @@ export function createItemCardElement(item) {
 
   const viewBtn = document.createElement('a');
   viewBtn.href = `/item.html?id=${item.id}`;
-  viewBtn.className = 'btn btn-gold btn-sm';
-  viewBtn.textContent = 'View Details';
+  viewBtn.className = 'btn btn-outline btn-sm btn-block';
+  viewBtn.textContent = 'View Item';
   footer.appendChild(viewBtn);
 
   body.appendChild(footer);
@@ -119,4 +120,3 @@ export function createItemCardElement(item) {
 
   return card;
 }
-

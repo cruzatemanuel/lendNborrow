@@ -6,7 +6,7 @@
   <title>Sign In — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -16,50 +16,45 @@
 
   <main class="main-content">
     <div class="auth-container">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h1 class="page-title" style="font-size: 26px;">Student Sign In</h1>
-        <p class="page-subtitle">Access your lendNborrow campus account</p>
+      <div class="auth-header">
+        <h1 class="page-title">Student Sign In</h1>
+        <p class="page-subtitle">Sign in with your BatStateU GSuite account</p>
       </div>
 
-      <!-- Verified Email Success Banner -->
-      <div id="confirmed-banner" class="hidden" style="background: var(--green-soft); color: var(--green); border: 1px solid var(--green); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px; font-weight: 600;">
-        ✓ Your BatStateU GSuite email has been verified! You can now sign in.
+      <div id="confirmed-banner" class="alert alert-success hidden">
+        Your BatStateU email has been confirmed. You can now sign in.
       </div>
 
-      <!-- Error Alert -->
-      <div id="error-alert" class="hidden" style="background: var(--red-soft); color: var(--red); border: 1px solid var(--red); padding: 12px; border-radius: var(--radius); margin-bottom: 20px; font-size: 14px;"></div>
+      <div id="error-alert" class="alert alert-error hidden"></div>
 
       <form id="signin-form">
         <div class="form-group">
           <label for="email">BatStateU GSuite Email</label>
           <input type="email" id="email" required placeholder="sr-code@g.batstate-u.edu.ph" autocomplete="email" />
-          <div class="form-help">Must end with @g.batstate-u.edu.ph</div>
+          <div class="form-help">Use your official @g.batstate-u.edu.ph address</div>
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password" />
+          <input type="password" id="password" required placeholder="Enter your password" autocomplete="current-password" />
         </div>
 
-        <button type="submit" id="submit-btn" class="btn btn-maroon btn-block" style="margin-top: 8px;">
+        <button type="submit" id="submit-btn" class="btn btn-maroon btn-block">
           Sign In
         </button>
       </form>
 
-      <!-- Optional Google Sign-In Container -->
-      <div id="google-auth-container" class="hidden" style="margin-top: 24px; text-align: center;">
-        <div style="display: flex; align-items: center; margin: 18px 0;">
-          <div style="flex: 1; height: 1px; background: var(--border-light);"></div>
-          <span style="padding: 0 12px; font-size: 12px; color: var(--muted); text-transform: uppercase;">or</span>
-          <div style="flex: 1; height: 1px; background: var(--border-light);"></div>
+      <div id="google-auth-container" class="hidden">
+        <div class="auth-divider">
+          <span>or</span>
         </div>
         <button type="button" id="btn-google" class="btn btn-secondary btn-block">
           <span>Sign in with Google (@g.batstate-u.edu.ph)</span>
         </button>
       </div>
 
-      <div style="text-align: center; margin-top: 24px; font-size: 14px; color: var(--muted);">
-        Don't have an account? <a href="/signup.html" style="color: var(--maroon); font-weight: 700;">Sign up here</a>
+      <div class="auth-footer">
+        Need an account? <a href="/signup.html">Create a student account</a>
       </div>
     </div>
   </main>
@@ -81,7 +76,6 @@
     const form = document.getElementById('signin-form');
     const submitBtn = document.getElementById('submit-btn');
 
-    // Show Google login only if enabled on backend
     getAuthConfig().then(config => {
       if (config?.googleAuthEnabled) {
         const googleBox = document.getElementById('google-auth-container');
@@ -108,11 +102,11 @@
 
       try {
         await login({ email, password });
-        showToast('Signed in successfully!', 'success');
+        showToast('Signed in.', 'success');
         const redirectUrl = urlParams.get('redirect') || '/dashboard.html';
         window.location.href = redirectUrl;
       } catch (err) {
-        errorAlert.textContent = err.message || 'Failed to sign in. Please check your credentials.';
+        errorAlert.textContent = err.message || 'Sign in failed. Check your email and password.';
         errorAlert.classList.remove('hidden');
         submitBtn.disabled = false;
         submitBtn.textContent = 'Sign In';
@@ -121,4 +115,3 @@
   </script>
 </body>
 </html>
-

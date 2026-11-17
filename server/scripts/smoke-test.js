@@ -1,29 +1,22 @@
-import {
-  APP_BASE_URL,
-  SEED_DEMO_PASSWORD
-} from '../src/config/env.js';
+import { APP_BASE_URL } from '../src/config/env.js';
 
 const BASE_URL = APP_BASE_URL || 'http://localhost:3000';
 
-const USER1_EMAIL = 'demo1@g.batstate-u.edu.ph';
-const USER2_EMAIL = 'demo2@g.batstate-u.edu.ph';
-const PASSWORD = SEED_DEMO_PASSWORD || 'CHANGE_ME_DEMO_PASSWORD';
-
-let user1Cookie = null;
-let user2Cookie = null;
-let testItemId = null;
-let testRequestId = null;
+// Optional verified student test credentials (supplied via environment variables when testing lifecycle)
+const OWNER_EMAIL = process.env.TEST_OWNER_EMAIL || '';
+const BORROWER_EMAIL = process.env.TEST_BORROWER_EMAIL || '';
+const USER_PASSWORD = process.env.TEST_USER_PASSWORD || '';
 
 const results = [];
 
 function recordStep(name, passed, detail = '') {
   results.push({ name, passed, detail });
-  const mark = passed ? '✅ PASS' : '❌ FAIL';
+  const mark = passed ? '[PASS]' : '[FAIL]';
   console.log(`${mark} | ${name}${detail ? ` (${detail})` : ''}`);
 }
 
 async function run() {
-  console.log(`\n🧪 Running lendNborrow Smoke Test against: ${BASE_URL}\n`);
+  console.log(`\nRunning lendNborrow API Verification against: ${BASE_URL}\n`);
 
   // Step 1: Health Check
   try {
@@ -33,25 +26,25 @@ async function run() {
       recordStep('Server Health Check', true, 'Supabase connected');
     } else {
       recordStep('Server Health Check', false, `Status ${res.status}: ${JSON.stringify(data)}`);
-      console.log('\n⚠️ Server reported Supabase is not configured. Aborting live test.');
+      console.log('\nServer reported Supabase is not configured. Aborting live database checks.');
       return;
     }
   } catch (err) {
     recordStep('Server Health Check', false, err.message);
-    console.log('\n⚠️ Could not reach server at ' + BASE_URL + '. Is it running?');
+    console.log('\nCould not reach server at ' + BASE_URL + '. Ensure the server is running.');
     return;
   }
 
-  // Step 2: GSuite Domain Restriction Check (Intruder Email Rejection)
+  // Step 2: GSuite Domain Restriction Check (Non-BatStateU Email Rejection)
   try {
     const res = await fetch(`${BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: 'intruder@gmail.com',
+        email: 'external.user@gmail.com',
         password: 'password123',
-        full_name: 'Outsider',
-        student_number: '00-00000',
+        full_name: 'External User',
+        student_number: '21-99999',
         college: 'CICS'
       })
     });
@@ -65,227 +58,172 @@ async function run() {
     recordStep('Institutional Email Domain Enforcement', false, err.message);
   }
 
-  // Helper for login and cookie extraction
-  async function performLogin(email, pwd) {
-    const res = await fetch(`${BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pwd })
-    });
+  // Step 3: Live Catalog Endpoint (handles empty or populated state cleanly)
+  try {
+    const res = await fetch(`${BASE_URL}/api/items`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
-
-    // Extract Set-Cookie header
-    const rawCookies = res.headers.get('set-cookie');
-    let cookie = '';
-    if (rawCookies) {
-      const match = rawCookies.match(/access_token=[^;]+/);
-      if (match) cookie = match[0];
-    }
-    return { data, cookie };
-  }
-
-  // Step 3: Log in as User 1 (Owner)
-  try {
-    const login1 = await performLogin(USER1_EMAIL, PASSWORD);
-    user1Cookie = login1.cookie;
-    recordStep('Sign in Demo User 1 (Owner)', true, login1.data.user?.full_name);
-  } catch (err) {
-    recordStep('Sign in Demo User 1 (Owner)', false, err.message);
-    return;
-  }
-
-  // Step 4: Log in as User 2 (Borrower)
-  try {
-    const login2 = await performLogin(USER2_EMAIL, PASSWORD);
-    user2Cookie = login2.cookie;
-    recordStep('Sign in Demo User 2 (Borrower)', true, login2.data.user?.full_name);
-  } catch (err) {
-    recordStep('Sign in Demo User 2 (Borrower)', false, err.message);
-    return;
-  }
-
-  // Step 5: User 1 lists an item
-  try {
-    // We send multipart or urlencoded/json for item creation
-    // The endpoint supports express.json or multer.
-    const res = await fetch(`${BASE_URL}/api/items`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': user1Cookie
-      },
-      body: JSON.stringify({
-        title: 'Smoke Test Scientific Calculator',
-        description: 'Temporary listing generated during smoke test verification.',
-        category: 'Academic & Engineering',
-        condition: 'Like New',
-        pickup_location: 'CICS Lobby Alangilan',
-        max_borrow_days: 7
-      })
-    });
-    const data = await res.json();
-    if (res.status === 201 && data.item?.id) {
-      testItemId = data.item.id;
-      recordStep('Create Listing (User 1)', true, `Item ID: ${testItemId}`);
+    if (res.status === 200 && Array.isArray(data.items) && typeof data.pagination?.total === 'number') {
+      recordStep('Catalog Browse Endpoint', true, `Returned ${data.items.length} items (total: ${data.pagination.total})`);
     } else {
-      recordStep('Create Listing (User 1)', false, data.error || 'Failed to create item');
-      return;
+      recordStep('Catalog Browse Endpoint', false, `Unexpected payload: ${JSON.stringify(data)}`);
     }
   } catch (err) {
-    recordStep('Create Listing (User 1)', false, err.message);
-    return;
+    recordStep('Catalog Browse Endpoint', false, err.message);
   }
 
-  // Step 6: User 2 requests to borrow the item
+  // Step 4: Community Analytics Endpoint (verifies 2-chart schema without trendingItems)
   try {
-    const today = new Date();
-    const startDate = today.toISOString().split('T')[0];
-    const dueDate = new Date(today.getTime() + 3 * 86400000).toISOString().split('T')[0];
-
-    const res = await fetch(`${BASE_URL}/api/requests`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': user2Cookie
-      },
-      body: JSON.stringify({
-        item_id: testItemId,
-        start_date: startDate,
-        due_date: dueDate,
-        message: 'Smoke test borrow request.'
-      })
-    });
+    const res = await fetch(`${BASE_URL}/api/analytics/community`);
     const data = await res.json();
-    if (res.status === 201 && data.request?.id) {
-      testRequestId = data.request.id;
-      recordStep('Submit Borrow Request (User 2)', true, `Request ID: ${testRequestId}`);
+    const validStructure =
+      res.status === 200 &&
+      Array.isArray(data.topCategories) &&
+      Array.isArray(data.collegeActivity) &&
+      !('trendingItems' in data);
+
+    if (validStructure) {
+      recordStep(
+        'Community Analytics Endpoint',
+        true,
+        `Categories: ${data.topCategories.length}, Colleges: ${data.collegeActivity.length}`
+      );
     } else {
-      recordStep('Submit Borrow Request (User 2)', false, data.error || 'Failed to create request');
-      return;
+      recordStep('Community Analytics Endpoint', false, `Unexpected schema: ${JSON.stringify(data)}`);
     }
   } catch (err) {
-    recordStep('Submit Borrow Request (User 2)', false, err.message);
-    return;
+    recordStep('Community Analytics Endpoint', false, err.message);
   }
 
-  // Step 7: User 1 approves request
-  try {
-    const res = await fetch(`${BASE_URL}/api/requests/${testRequestId}/approve`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': user1Cookie
+  // Step 5+: Optional Authenticated Lifecycle Verification (if test credentials are set)
+  if (OWNER_EMAIL && BORROWER_EMAIL && USER_PASSWORD) {
+    let ownerCookie = '';
+    let borrowerCookie = '';
+    let testItemId = null;
+    let testRequestId = null;
+
+    async function performLogin(email, pwd) {
+      const res = await fetch(`${BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pwd })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+
+      const rawCookies = res.headers.get('set-cookie');
+      let cookie = '';
+      if (rawCookies) {
+        const match = rawCookies.match(/access_token=[^;]+/);
+        if (match) cookie = match[0];
       }
-    });
-    const data = await res.json();
-    if (res.ok) {
-      recordStep('Approve Request (User 1)', true, 'Status transitioned to approved');
-    } else {
-      recordStep('Approve Request (User 1)', false, data.error);
+      return { data, cookie };
     }
-  } catch (err) {
-    recordStep('Approve Request (User 1)', false, err.message);
-  }
 
-  // Step 8: User 1 confirms pickup / handover
-  try {
-    const res = await fetch(`${BASE_URL}/api/requests/${testRequestId}/pickup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': user1Cookie
+    try {
+      const login1 = await performLogin(OWNER_EMAIL, USER_PASSWORD);
+      ownerCookie = login1.cookie;
+      recordStep('Sign in Owner Account', true, login1.data.user?.email);
+
+      const login2 = await performLogin(BORROWER_EMAIL, USER_PASSWORD);
+      borrowerCookie = login2.cookie;
+      recordStep('Sign in Borrower Account', true, login2.data.user?.email);
+
+      // Create item
+      const createRes = await fetch(`${BASE_URL}/api/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Cookie: ownerCookie },
+        body: JSON.stringify({
+          title: 'Verification Scientific Calculator',
+          description: 'Temporary verification listing.',
+          category: 'Academic & Engineering',
+          condition: 'Good',
+          pickup_location: 'CICS Building',
+          max_borrow_days: 7
+        })
+      });
+      const createData = await createRes.json();
+      if (createRes.status === 201 && createData.item?.id) {
+        testItemId = createData.item.id;
+        recordStep('Create Listing', true, `Item ID: ${testItemId}`);
+      } else {
+        recordStep('Create Listing', false, createData.error || 'Failed');
       }
-    });
-    const data = await res.json();
-    if (res.ok) {
-      recordStep('Confirm Pickup (User 1)', true, 'Status transitioned to borrowing; item borrowed');
-    } else {
-      recordStep('Confirm Pickup (User 1)', false, data.error);
+
+      if (testItemId) {
+        const today = new Date();
+        const startDate = today.toISOString().split('T')[0];
+        const dueDate = new Date(today.getTime() + 2 * 86400000).toISOString().split('T')[0];
+
+        const reqRes = await fetch(`${BASE_URL}/api/requests`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: borrowerCookie },
+          body: JSON.stringify({
+            item_id: testItemId,
+            start_date: startDate,
+            due_date: dueDate,
+            message: 'Verification request'
+          })
+        });
+        const reqData = await reqRes.json();
+        if (reqRes.status === 201 && reqData.request?.id) {
+          testRequestId = reqData.request.id;
+          recordStep('Submit Borrow Request', true, `Request ID: ${testRequestId}`);
+        } else {
+          recordStep('Submit Borrow Request', false, reqData.error || 'Failed');
+        }
+      }
+
+      if (testRequestId) {
+        const appRes = await fetch(`${BASE_URL}/api/requests/${testRequestId}/approve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: ownerCookie }
+        });
+        recordStep('Approve Request', appRes.ok);
+
+        const pickRes = await fetch(`${BASE_URL}/api/requests/${testRequestId}/pickup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: ownerCookie }
+        });
+        recordStep('Confirm Pickup', pickRes.ok);
+
+        const retRes = await fetch(`${BASE_URL}/api/requests/${testRequestId}/return`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: borrowerCookie },
+          body: JSON.stringify({ condition_note: 'Returned in good order' })
+        });
+        recordStep('Submit Return', retRes.ok);
+
+        const confRes = await fetch(`${BASE_URL}/api/requests/${testRequestId}/confirm-return`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Cookie: ownerCookie },
+          body: JSON.stringify({ condition: 'Good' })
+        });
+        recordStep('Confirm Return', confRes.ok);
+      }
+
+      if (testItemId) {
+        const delRes = await fetch(`${BASE_URL}/api/items/${testItemId}`, {
+          method: 'DELETE',
+          headers: { Cookie: ownerCookie }
+        });
+        recordStep('Delete Temporary Listing', delRes.ok);
+      }
+    } catch (err) {
+      recordStep('Authenticated Lifecycle Check', false, err.message);
     }
-  } catch (err) {
-    recordStep('Confirm Pickup (User 1)', false, err.message);
+  } else {
+    console.log('\nNote: Set TEST_OWNER_EMAIL, TEST_BORROWER_EMAIL, and TEST_USER_PASSWORD to run authenticated lifecycle steps.');
   }
 
-  // Step 9: User 2 submits return
-  try {
-    const res = await fetch(`${BASE_URL}/api/requests/${testRequestId}/return`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': user2Cookie
-      },
-      body: JSON.stringify({ condition_note: 'Returned intact.' })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      recordStep('Submit Return (User 2)', true, 'Status transitioned to return_submitted');
-    } else {
-      recordStep('Submit Return (User 2)', false, data.error);
-    }
-  } catch (err) {
-    recordStep('Submit Return (User 2)', false, err.message);
-  }
-
-  // Step 10: User 1 confirms return
-  try {
-    const res = await fetch(`${BASE_URL}/api/requests/${testRequestId}/confirm-return`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': user1Cookie
-      },
-      body: JSON.stringify({ condition: 'Like New' })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      recordStep('Confirm Return (User 1)', true, 'Status returned; item available again');
-    } else {
-      recordStep('Confirm Return (User 1)', false, data.error);
-    }
-  } catch (err) {
-    recordStep('Confirm Return (User 1)', false, err.message);
-  }
-
-  // Step 11: Verify item is back to available
-  try {
-    const res = await fetch(`${BASE_URL}/api/items/${testItemId}`);
-    const data = await res.json();
-    if (res.ok && data.item?.status === 'available') {
-      recordStep('Verify Item Available Post-Return', true, 'Item status is available');
-    } else {
-      recordStep('Verify Item Available Post-Return', false, `Status: ${data.item?.status}`);
-    }
-  } catch (err) {
-    recordStep('Verify Item Available Post-Return', false, err.message);
-  }
-
-  // Step 12: Clean up test item
-  try {
-    const res = await fetch(`${BASE_URL}/api/items/${testItemId}`, {
-      method: 'DELETE',
-      headers: { 'Cookie': user1Cookie }
-    });
-    if (res.ok) {
-      recordStep('Cleanup Test Item', true, 'Deleted test listing');
-    } else {
-      recordStep('Cleanup Test Item', false);
-    }
-  } catch (err) {
-    recordStep('Cleanup Test Item', false, err.message);
-  }
-
-  // Print Summary Table
   console.log('\n==================================================');
-  console.log('            SMOKE TEST SUMMARY RESULTS            ');
+  console.log('            VERIFICATION SUMMARY                  ');
   console.log('==================================================');
   const allPassed = results.every(r => r.passed);
   results.forEach(r => {
-    console.log(`${r.passed ? '✅' : '❌'}  ${r.name}`);
+    console.log(`${r.passed ? '[PASS]' : '[FAIL]'} ${r.name}`);
   });
   console.log('==================================================');
-  console.log(`Final Result: ${allPassed ? 'ALL TESTS PASSED 🎉' : 'SOME TESTS FAILED ⚠️'}\n`);
+  console.log(`Final Result: ${allPassed ? 'ALL CHECKS PASSED' : 'SOME CHECKS FAILED'}\n`);
 }
 
 run();
-

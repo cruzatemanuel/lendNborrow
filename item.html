@@ -6,7 +6,7 @@
   <title>Item Details — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -15,41 +15,39 @@
   <header id="header" class="hdr"></header>
 
   <main class="main-content">
-    <div style="margin-bottom: 20px;">
-      <a href="/browse.html" style="font-weight: 700; color: var(--maroon); font-size: 14px;">← Back to Browse</a>
+    <div class="breadcrumb-bar">
+      <a href="/browse.html" class="back-link">Back to Catalog</a>
     </div>
 
-    <!-- Loading State -->
     <div id="loading-box" class="loading-box">
       <div class="spinner"></div>
       <p>Loading item details...</p>
     </div>
 
-    <!-- Error State -->
     <div id="error-box" class="empty-state hidden">
-      <h3 style="color: var(--red);">Item Not Found</h3>
-      <p>This listing may have been removed or does not exist.</p>
-      <a href="/browse.html" class="btn btn-outline btn-sm" style="margin-top: 16px;">Back to Catalog</a>
+      <h3>Item Not Found</h3>
+      <p>This listing may have been removed or is no longer available.</p>
+      <div class="empty-state-actions">
+        <a href="/browse.html" class="btn btn-outline btn-sm">Back to Catalog</a>
+      </div>
     </div>
 
-    <!-- Item Layout Container -->
     <div id="item-layout" class="item-detail-layout hidden">
       <div class="item-detail-media">
-        <div id="img-container" style="width: 100%; height: 360px; background: #F3EAE9; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 64px; overflow: hidden;">
-          📦
+        <div id="img-container" class="item-media-box">
+          No Photo Available
         </div>
       </div>
 
       <div class="item-detail-info">
-        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+        <div class="item-detail-badges">
           <span id="item-category" class="badge badge-maroon">Category</span>
           <span id="item-status" class="badge badge-green">Available</span>
         </div>
 
         <h1 id="item-title">Item Title</h1>
-        <p id="item-desc" style="color: var(--ink-light); margin: 16px 0; line-height: 1.6; white-space: pre-wrap;"></p>
+        <p id="item-desc" class="item-description"></p>
 
-        <!-- Specs Grid -->
         <div class="item-specs-grid">
           <div class="spec-item">
             <span class="spec-label">Condition</span>
@@ -69,27 +67,23 @@
           </div>
         </div>
 
-        <!-- Action Area -->
-        <div id="action-area" style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-light);">
-          <!-- Dynamic action buttons injected via JS -->
-        </div>
+        <div id="action-area" class="item-action-bar"></div>
       </div>
     </div>
 
-    <!-- Borrow Request Modal Form -->
     <div id="request-modal" class="modal-backdrop hidden">
       <div class="modal-content">
         <div class="modal-header">
           <h3 class="modal-title">Request to Borrow</h3>
-          <button id="close-modal-btn" class="modal-close">&times;</button>
+          <button id="close-modal-btn" class="modal-close" aria-label="Close modal">×</button>
         </div>
         <form id="borrow-form">
           <div class="modal-body">
-            <p style="font-size: 14px; margin-bottom: 16px; color: var(--ink-light);">
-              You are requesting to borrow: <strong id="modal-item-title" style="color: var(--maroon);"></strong>
+            <p class="modal-intro">
+              Requesting item: <strong id="modal-item-title"></strong>
             </p>
 
-            <div id="request-error" class="hidden" style="background: var(--red-soft); color: var(--red); padding: 10px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px;"></div>
+            <div id="request-error" class="alert alert-error hidden"></div>
 
             <div class="form-row">
               <div class="form-group">
@@ -103,13 +97,13 @@
             </div>
 
             <div class="form-group">
-              <label for="req_message">Message to Owner (Optional)</label>
-              <textarea id="req_message" rows="3" placeholder="State your purpose or preferred meeting spot on campus..."></textarea>
+              <label for="req_message">Note to Owner (Optional)</label>
+              <textarea id="req_message" rows="3" placeholder="Include your class schedule or preferred handover time on campus..."></textarea>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" id="cancel-req-btn" class="btn btn-secondary btn-sm">Cancel</button>
-            <button type="submit" id="submit-req-btn" class="btn btn-gold btn-sm">Send Request</button>
+            <button type="submit" id="submit-req-btn" class="btn btn-maroon btn-sm">Submit Request</button>
           </div>
         </form>
       </div>
@@ -172,49 +166,46 @@
       document.getElementById('item-condition').textContent = currentItem.condition || 'Good';
       document.getElementById('item-duration').textContent = `${currentItem.max_borrow_days} days max`;
       document.getElementById('item-location').textContent = currentItem.pickup_location || 'Alangilan Campus';
-      document.getElementById('item-owner').textContent = `${currentItem.owner?.full_name || 'Student'} (${currentItem.owner?.college || 'Alangilan'})`;
+      document.getElementById('item-owner').textContent =
+        `${currentItem.owner?.full_name || 'Student'} (${currentItem.owner?.college || 'Alangilan'})`;
 
       const statusEl = document.getElementById('item-status');
       statusEl.textContent = currentItem.status;
       statusEl.className = `badge ${currentItem.status === 'available' ? 'badge-green' : 'badge-muted'}`;
 
       const imgBox = document.getElementById('img-container');
+      imgBox.replaceChildren();
       if (currentItem.image_url) {
-        imgBox.replaceChildren();
         const img = document.createElement('img');
         img.src = currentItem.image_url;
         img.alt = currentItem.title;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
         imgBox.appendChild(img);
+      } else {
+        imgBox.textContent = 'No Photo Available';
       }
 
-      // Render Actions
       actionArea.replaceChildren();
 
       const isOwner = currentUser && currentUser.id === currentItem.owner_id;
 
       if (isOwner) {
-        // Owner controls
         const ownerDiv = document.createElement('div');
-        ownerDiv.style.display = 'flex';
-        ownerDiv.style.gap = '12px';
-        ownerDiv.style.flexWrap = 'wrap';
+        ownerDiv.className = 'owner-actions';
 
         const editBtn = document.createElement('a');
         editBtn.href = `/listing-form.html?id=${currentItem.id}`;
         editBtn.className = 'btn btn-outline btn-sm';
-        editBtn.textContent = '✏️ Edit Listing';
+        editBtn.textContent = 'Edit Listing';
         ownerDiv.appendChild(editBtn);
 
         const toggleBtn = document.createElement('button');
         toggleBtn.className = 'btn btn-secondary btn-sm';
         toggleBtn.textContent = currentItem.status === 'available' ? 'Mark Unavailable' : 'Mark Available';
+        if (currentItem.status === 'borrowed') toggleBtn.disabled = true;
         toggleBtn.addEventListener('click', async () => {
           try {
             await toggleAvailability(currentItem.id);
-            showToast('Listing availability updated.', 'success');
+            showToast('Listing status updated.', 'success');
             loadItem();
           } catch (err) {
             showToast(err.message, 'error');
@@ -224,17 +215,17 @@
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-danger btn-sm';
-        deleteBtn.textContent = '🗑️ Delete Listing';
+        deleteBtn.textContent = 'Delete Listing';
         deleteBtn.addEventListener('click', () => {
           showModal({
             title: 'Delete Listing',
-            message: `Are you sure you want to permanently delete "${currentItem.title}"?`,
+            message: `Permanently delete "${currentItem.title}"?`,
             confirmText: 'Delete',
             onConfirm: async () => {
               try {
                 await deleteItem(currentItem.id);
-                showToast('Listing deleted successfully.', 'success');
-                setTimeout(() => window.location.href = '/my-listings.html', 800);
+                showToast('Listing deleted.', 'success');
+                setTimeout(() => window.location.href = '/my-listings.html', 600);
               } catch (err) {
                 showToast(err.message, 'error');
               }
@@ -245,10 +236,9 @@
 
         actionArea.appendChild(ownerDiv);
       } else {
-        // Borrower controls
         if (currentItem.status === 'available') {
           const reqBtn = document.createElement('button');
-          reqBtn.className = 'btn btn-gold';
+          reqBtn.className = 'btn btn-maroon';
           reqBtn.textContent = 'Request to Borrow';
           reqBtn.addEventListener('click', () => {
             if (!currentUser) {
@@ -260,9 +250,8 @@
           actionArea.appendChild(reqBtn);
         } else {
           const unavailableMsg = document.createElement('p');
-          unavailableMsg.style.color = 'var(--muted)';
-          unavailableMsg.style.fontWeight = '600';
-          unavailableMsg.textContent = `This item is currently ${currentItem.status} and cannot be requested.`;
+          unavailableMsg.className = 'unavailable-notice';
+          unavailableMsg.textContent = `This item is currently ${currentItem.status} and unavailable for requests.`;
           actionArea.appendChild(unavailableMsg);
         }
       }
@@ -272,7 +261,6 @@
       document.getElementById('modal-item-title').textContent = currentItem.title;
       requestError.classList.add('hidden');
 
-      // Set min dates
       const today = new Date().toISOString().split('T')[0];
       const startInput = document.getElementById('start_date');
       const dueInput = document.getElementById('due_date');
@@ -316,15 +304,15 @@
         });
 
         requestModal.classList.add('hidden');
-        showToast('Borrow request submitted successfully!', 'success');
+        showToast('Borrow request sent.', 'success');
         setTimeout(() => {
           window.location.href = '/my-borrows.html';
-        }, 800);
+        }, 600);
       } catch (err) {
         requestError.textContent = err.message || 'Failed to submit request.';
         requestError.classList.remove('hidden');
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Request';
+        submitBtn.textContent = 'Submit Request';
       }
     });
 
@@ -332,4 +320,3 @@
   </script>
 </body>
 </html>
-

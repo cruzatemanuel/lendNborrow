@@ -6,7 +6,6 @@
   "scripts": {
     "start": "npm --prefix server start",
     "dev": "npm --prefix server run dev",
-    "seed": "npm --prefix server run seed",
     "smoke": "npm --prefix server run smoke"
   }
 }

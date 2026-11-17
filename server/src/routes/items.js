@@ -29,6 +29,7 @@ router.get('/', requireSupabase, async (req, res) => {
   const {
     q,
     category,
+    college,
     status = 'available',
     sort = 'newest',
     page = '1',
@@ -40,9 +41,14 @@ router.get('/', requireSupabase, async (req, res) => {
   const offset = (pageNum - 1) * pageSize;
 
   try {
+    const hasCollegeFilter = Boolean(college && college !== 'All' && college !== 'all');
+    const ownerJoin = hasCollegeFilter
+      ? 'owner:profiles!inner(id, full_name, college, campus)'
+      : 'owner:profiles(id, full_name, college, campus)';
+
     let query = supabaseAdmin
       .from('items')
-      .select('*, owner:profiles(id, full_name, college, campus)', { count: 'exact' });
+      .select(`*, ${ownerJoin}`, { count: 'exact' });
 
     // Status filtering
     if (status && status !== 'all') {
@@ -52,6 +58,11 @@ router.get('/', requireSupabase, async (req, res) => {
     // Category filtering
     if (category && category !== 'All' && category !== 'all') {
       query = query.eq('category', category);
+    }
+
+    // College filtering
+    if (hasCollegeFilter) {
+      query = query.eq('owner.college', college);
     }
 
     // Text search on title and description
