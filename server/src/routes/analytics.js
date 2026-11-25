@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabaseAdmin, requireSupabase } from '../services/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
+import { normalizeItemRecord } from './items.js';
 
 const router = Router();
 
@@ -51,7 +52,7 @@ router.get('/me', requireSupabase, requireAuth, async (req, res) => {
     // Recent activity feed (latest 10 status changes involving user)
     const { data: recentActivity } = await supabaseAdmin
       .from('borrow_requests')
-      .select('*, item:items(title, category), borrower:profiles!borrow_requests_borrower_id_fkey(full_name), owner:profiles!borrow_requests_owner_id_fkey(full_name)')
+      .select('*, item:items(*), borrower:profiles!borrow_requests_borrower_id_fkey(full_name), owner:profiles!borrow_requests_owner_id_fkey(full_name)')
       .or(`owner_id.eq.${userId},borrower_id.eq.${userId}`)
       .order('updated_at', { ascending: false })
       .limit(10);
@@ -59,7 +60,7 @@ router.get('/me', requireSupabase, requireAuth, async (req, res) => {
     // Borrowing history (records where user was borrower)
     const { data: borrowingHistory } = await supabaseAdmin
       .from('borrow_requests')
-      .select('*, item:items(title, category, condition), owner:profiles!borrow_requests_owner_id_fkey(full_name, college)')
+      .select('*, item:items(*), owner:profiles!borrow_requests_owner_id_fkey(full_name, college)')
       .eq('borrower_id', userId)
       .order('created_at', { ascending: false })
       .limit(20);
@@ -71,8 +72,14 @@ router.get('/me', requireSupabase, requireAuth, async (req, res) => {
         pendingRequests: totalPendingCount || 0,
         completedReturns: completedReturnsCount || 0
       },
-      recentActivity: recentActivity || [],
-      borrowingHistory: borrowingHistory || []
+      recentActivity: (recentActivity || []).map(r => ({
+        ...r,
+        item: r.item ? normalizeItemRecord(r.item) : r.item
+      })),
+      borrowingHistory: (borrowingHistory || []).map(r => ({
+        ...r,
+        item: r.item ? normalizeItemRecord(r.item) : r.item
+      }))
     });
   } catch (err) {
     console.error('Personal analytics error:', err);

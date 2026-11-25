@@ -22,6 +22,105 @@ const upload = multer({
 });
 
 /**
+ * Helper: Coerce form/JSON boolean inputs cleanly.
+ */
+function parseBoolean(value) {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    return ['true', '1', 'yes', 'on'].includes(value.trim().toLowerCase());
+  }
+  return false;
+}
+
+/**
+ * Helper: Validate and sanitize damage/liability compensation fields.
+ * Returns { error } if invalid, or { has_liability, liability_amount, liability_terms }.
+ */
+function parseAndValidateLiability(body = {}, existingItem = null) {
+  const hasLiabilityInput =
+    body.has_liability !== undefined
+      ? parseBoolean(body.has_liability)
+      : Boolean(existingItem?.has_liability);
+
+  if (!hasLiabilityInput) {
+    return {
+      has_liability: false,
+      liability_amount: null,
+      liability_terms: null
+    };
+  }
+
+  const rawAmount =
+    body.liability_amount !== undefined
+      ? body.liability_amount
+      : existingItem?.liability_amount;
+
+  if (rawAmount === undefined || rawAmount === null || String(rawAmount).trim() === '') {
+    return {
+      error: 'Compensation amount is required when damage/liability compensation is enabled.'
+    };
+  }
+
+  const parsedAmount = Number(rawAmount);
+  if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    return {
+      error: 'Compensation amount must be a valid positive number greater than 0.'
+    };
+  }
+
+  if (parsedAmount > 99999999.99) {
+    return {
+      error: 'Compensation amount exceeds the maximum allowed limit.'
+    };
+  }
+
+  const roundedAmount = Math.round(parsedAmount * 100) / 100;
+
+  const rawTerms =
+    body.liability_terms !== undefined
+      ? body.liability_terms
+      : existingItem?.liability_terms;
+
+  const trimmedTerms =
+    rawTerms !== undefined && rawTerms !== null ? String(rawTerms).trim() : '';
+
+  return {
+    has_liability: true,
+    liability_amount: roundedAmount,
+    liability_terms: trimmedTerms.length > 0 ? trimmedTerms : null
+  };
+}
+
+/**
+ * Helper: Normalize item record so liability fields are consistently typed
+ * even for legacy records where values are null or false.
+ */
+export function normalizeItemRecord(item) {
+  if (!item || typeof item !== 'object') return item;
+  const hasLiability = Boolean(item.has_liability);
+  const parsedAmount =
+    hasLiability && item.liability_amount !== null && item.liability_amount !== undefined
+      ? Number(item.liability_amount)
+      : null;
+  const cleanAmount =
+    parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount > 0
+      ? Math.round(parsedAmount * 100) / 100
+      : null;
+  const cleanTerms =
+    hasLiability && typeof item.liability_terms === 'string' && item.liability_terms.trim()
+      ? item.liability_terms.trim()
+      : null;
+
+  return {
+    ...item,
+    has_liability: hasLiability && cleanAmount !== null,
+    liability_amount: hasLiability ? cleanAmount : null,
+    liability_terms: hasLiability && cleanAmount !== null ? cleanTerms : null
+  };
+}
+
+/**
  * GET /api/items
  * Browse, search, filter, and paginate items.
  */
@@ -91,7 +190,7 @@ router.get('/', requireSupabase, async (req, res) => {
     }
 
     res.json({
-      items: items || [],
+      items: (items || []).map(normalizeItemRecord),
       pagination: {
         page: pageNum,
         limit: pageSize,
@@ -121,7 +220,7 @@ router.get('/mine', requireSupabase, requireAuth, async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.json({ items: items || [] });
+    res.json({ items: (items || []).map(normalizeItemRecord) });
   } catch (err) {
     console.error('Mine items error:', err);
     res.status(500).json({ error: 'Failed to retrieve your listings.' });
@@ -146,7 +245,7 @@ router.get('/:id', requireSupabase, async (req, res) => {
       return res.status(404).json({ error: 'Item not found.' });
     }
 
-    res.json({ item });
+    res.json({ item: normalizeItemRecord(item) });
   } catch (err) {
     console.error('Item detail error:', err);
     res.status(500).json({ error: 'Failed to retrieve item details.' });
@@ -214,27 +313,58 @@ router.post(
       return res.status(400).json({ error: 'Maximum borrow days must be at least 1 day.' });
     }
 
+    const liability = parseAndValidateLiability(req.body);
+    if (liability.error) {
+      return res.status(400).json({ error: liability.error });
+    }
+
     try {
       let imageUrl = null;
       if (req.file) {
         imageUrl = await uploadItemImage(req.user.id, req.file);
       }
 
-      const { data: newItem, error } = await supabaseAdmin
+      const insertPayload = {
+        owner_id: req.user.id,
+        title: title.trim(),
+        description: (description || '').trim(),
+        category: category.trim(),
+        condition: (condition || 'Good').trim(),
+        pickup_location: (pickup_location || 'Alangilan Campus').trim(),
+        max_borrow_days: borrowDays,
+        has_liability: liability.has_liability,
+        liability_amount: liability.liability_amount,
+        liability_terms: liability.liability_terms,
+        image_url: imageUrl,
+        status: 'available'
+      };
+
+      let { data: newItem, error } = await supabaseAdmin
         .from('items')
-        .insert({
-          owner_id: req.user.id,
-          title: title.trim(),
-          description: (description || '').trim(),
-          category: category.trim(),
-          condition: (condition || 'Good').trim(),
-          pickup_location: (pickup_location || 'Alangilan Campus').trim(),
-          max_borrow_days: borrowDays,
-          image_url: imageUrl,
-          status: 'available'
-        })
+        .insert(insertPayload)
         .select()
         .single();
+
+      // Graceful fallback if migration 003 has not been executed in remote Supabase yet
+      if (
+        error &&
+        /has_liability|liability_amount|liability_terms/i.test(error.message || '') &&
+        !liability.has_liability
+      ) {
+        const {
+          has_liability: _hl,
+          liability_amount: _la,
+          liability_terms: _lt,
+          ...legacyPayload
+        } = insertPayload;
+        const retryResult = await supabaseAdmin
+          .from('items')
+          .insert(legacyPayload)
+          .select()
+          .single();
+        newItem = retryResult.data;
+        error = retryResult.error;
+      }
 
       if (error) {
         return res.status(400).json({ error: error.message });
@@ -242,7 +372,7 @@ router.post(
 
       res.status(201).json({
         message: 'Item listed successfully.',
-        item: newItem
+        item: normalizeItemRecord(newItem)
       });
     } catch (err) {
       console.error('Create item error:', err);
@@ -252,87 +382,136 @@ router.post(
 );
 
 /**
- * PATCH /api/items/:id
+ * Shared handler for PATCH /api/items/:id and PUT /api/items/:id
  * Edit an existing item listing (owner only).
  */
-router.patch(
-  '/:id',
-  requireSupabase,
-  requireAuth,
-  upload.single('image'),
-  async (req, res) => {
-    const { id } = req.params;
-    const {
-      title,
-      description,
-      category,
-      condition,
-      pickup_location,
-      max_borrow_days,
-      status
-    } = req.body || {};
+async function handleUpdateItem(req, res) {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    category,
+    condition,
+    pickup_location,
+    max_borrow_days,
+    status,
+    has_liability,
+    liability_amount,
+    liability_terms
+  } = req.body || {};
 
-    try {
-      // Verify ownership
-      const { data: item, error: findError } = await supabaseAdmin
+  try {
+    // Verify ownership
+    const { data: item, error: findError } = await supabaseAdmin
+      .from('items')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (findError || !item) {
+      return res.status(404).json({ error: 'Item not found.' });
+    }
+
+    if (item.owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized. You do not own this listing.' });
+    }
+
+    const updates = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (title !== undefined) {
+      if (!title.trim()) {
+        return res.status(400).json({ error: 'Item title cannot be empty.' });
+      }
+      updates.title = title.trim();
+    }
+    if (description !== undefined) updates.description = description.trim();
+    if (category !== undefined) {
+      if (!category.trim()) {
+        return res.status(400).json({ error: 'Category cannot be empty.' });
+      }
+      updates.category = category.trim();
+    }
+    if (condition !== undefined) updates.condition = condition.trim();
+    if (pickup_location !== undefined) updates.pickup_location = pickup_location.trim();
+    if (max_borrow_days !== undefined) {
+      const parsed = parseInt(max_borrow_days, 10);
+      if (!Number.isFinite(parsed) || parsed < 1) {
+        return res.status(400).json({ error: 'Maximum borrow days must be at least 1 day.' });
+      }
+      updates.max_borrow_days = parsed;
+    }
+    if (status !== undefined && ['available', 'unavailable'].includes(status)) {
+      if (item.status === 'borrowed') {
+        return res.status(400).json({ error: 'Cannot change status while item is borrowed.' });
+      }
+      updates.status = status;
+    }
+
+    if (
+      has_liability !== undefined ||
+      liability_amount !== undefined ||
+      liability_terms !== undefined
+    ) {
+      const liability = parseAndValidateLiability(req.body, item);
+      if (liability.error) {
+        return res.status(400).json({ error: liability.error });
+      }
+      updates.has_liability = liability.has_liability;
+      updates.liability_amount = liability.liability_amount;
+      updates.liability_terms = liability.liability_terms;
+    }
+
+    if (req.file) {
+      updates.image_url = await uploadItemImage(req.user.id, req.file);
+    }
+
+    let { data: updatedItem, error: updateError } = await supabaseAdmin
+      .from('items')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    // Graceful fallback if migration 003 has not been executed in remote Supabase yet
+    if (
+      updateError &&
+      /has_liability|liability_amount|liability_terms/i.test(updateError.message || '') &&
+      !updates.has_liability
+    ) {
+      const {
+        has_liability: _hl,
+        liability_amount: _la,
+        liability_terms: _lt,
+        ...legacyUpdates
+      } = updates;
+      const retryResult = await supabaseAdmin
         .from('items')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (findError || !item) {
-        return res.status(404).json({ error: 'Item not found.' });
-      }
-
-      if (item.owner_id !== req.user.id) {
-        return res.status(403).json({ error: 'Unauthorized. You do not own this listing.' });
-      }
-
-      const updates = {
-        updated_at: new Date().toISOString()
-      };
-
-      if (title !== undefined) updates.title = title.trim();
-      if (description !== undefined) updates.description = description.trim();
-      if (category !== undefined) updates.category = category.trim();
-      if (condition !== undefined) updates.condition = condition.trim();
-      if (pickup_location !== undefined) updates.pickup_location = pickup_location.trim();
-      if (max_borrow_days !== undefined) {
-        const parsed = parseInt(max_borrow_days, 10);
-        if (parsed >= 1) updates.max_borrow_days = parsed;
-      }
-      if (status !== undefined && ['available', 'unavailable'].includes(status)) {
-        if (item.status === 'borrowed') {
-          return res.status(400).json({ error: 'Cannot change status while item is borrowed.' });
-        }
-        updates.status = status;
-      }
-
-      if (req.file) {
-        updates.image_url = await uploadItemImage(req.user.id, req.file);
-      }
-
-      const { data: updatedItem, error: updateError } = await supabaseAdmin
-        .from('items')
-        .update(updates)
+        .update(legacyUpdates)
         .eq('id', id)
         .select()
         .single();
-
-      if (updateError) {
-        return res.status(400).json({ error: updateError.message });
-      }
-
-      res.json({
-        message: 'Item updated successfully.',
-        item: updatedItem
-      });
-    } catch (err) {
-      console.error('Update item error:', err);
-      res.status(500).json({ error: err.message || 'Failed to update item.' });
+      updatedItem = retryResult.data;
+      updateError = retryResult.error;
     }
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
+    }
+
+    res.json({
+      message: 'Item updated successfully.',
+      item: normalizeItemRecord(updatedItem)
+    });
+  } catch (err) {
+    console.error('Update item error:', err);
+    res.status(500).json({ error: err.message || 'Failed to update item.' });
   }
-);
+}
+
+router.patch('/:id', requireSupabase, requireAuth, upload.single('image'), handleUpdateItem);
+router.put('/:id', requireSupabase, requireAuth, upload.single('image'), handleUpdateItem);
 
 /**
  * PATCH /api/items/:id/availability
@@ -375,7 +554,7 @@ router.patch('/:id/availability', requireSupabase, requireAuth, async (req, res)
 
     res.json({
       message: `Item marked as ${nextStatus}.`,
-      item: updated
+      item: normalizeItemRecord(updated)
     });
   } catch (err) {
     console.error('Toggle availability error:', err);

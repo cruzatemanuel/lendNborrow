@@ -43,6 +43,7 @@
         <div class="item-detail-badges">
           <span id="item-category" class="badge badge-maroon">Category</span>
           <span id="item-status" class="badge badge-green">Available</span>
+          <span id="item-liability-badge" class="badge badge-liability hidden"></span>
         </div>
 
         <h1 id="item-title">Item Title</h1>
@@ -65,6 +66,18 @@
             <span class="spec-label">Listed By</span>
             <span class="spec-value" id="item-owner">Student</span>
           </div>
+          <div class="spec-item">
+            <span class="spec-label">Damage / Liability Fee</span>
+            <span class="spec-value" id="item-liability-spec">None Required</span>
+          </div>
+        </div>
+
+        <div id="item-liability-notice" class="liability-detail-notice hidden" role="note">
+          <div class="liability-detail-header">
+            <span class="liability-detail-title">Damage & Liability Compensation Required</span>
+            <span id="item-liability-amount" class="liability-detail-amount">₱0.00</span>
+          </div>
+          <p id="item-liability-terms" class="liability-detail-terms"></p>
         </div>
 
         <div id="action-area" class="item-action-bar"></div>
@@ -82,6 +95,14 @@
             <p class="modal-intro">
               Requesting item: <strong id="modal-item-title"></strong>
             </p>
+
+            <div id="modal-liability-notice" class="liability-modal-notice hidden">
+              <div class="liability-modal-title">
+                <span>Damage / Liability Fee:</span>
+                <strong id="modal-liability-amount"></strong>
+              </div>
+              <p id="modal-liability-terms" class="liability-modal-terms"></p>
+            </div>
 
             <div id="request-error" class="alert alert-error hidden"></div>
 
@@ -115,7 +136,13 @@
   <script type="module">
     import { initLayout, showToast, showModal } from '/js/layout.js';
     import { getMe } from '/js/auth.js';
-    import { getItem, deleteItem, toggleAvailability } from '/js/items.js';
+    import {
+      getItem,
+      deleteItem,
+      toggleAvailability,
+      formatPesoAmount,
+      hasItemLiability
+    } from '/js/items.js';
     import { createRequest } from '/js/requests.js';
 
     await initLayout();
@@ -172,6 +199,33 @@
       const statusEl = document.getElementById('item-status');
       statusEl.textContent = currentItem.status;
       statusEl.className = `badge ${currentItem.status === 'available' ? 'badge-green' : 'badge-muted'}`;
+
+      const liabilityBadge = document.getElementById('item-liability-badge');
+      const liabilitySpec = document.getElementById('item-liability-spec');
+      const liabilityNotice = document.getElementById('item-liability-notice');
+      const liabilityAmountEl = document.getElementById('item-liability-amount');
+      const liabilityTermsEl = document.getElementById('item-liability-terms');
+
+      if (hasItemLiability(currentItem)) {
+        const formattedFee = formatPesoAmount(currentItem.liability_amount);
+        liabilityBadge.textContent = `Damage Fee: ${formattedFee}`;
+        liabilityBadge.classList.remove('hidden');
+
+        liabilitySpec.textContent = formattedFee;
+        liabilitySpec.classList.add('spec-value-liability');
+
+        liabilityAmountEl.textContent = formattedFee;
+        const cleanTerms = currentItem.liability_terms ? String(currentItem.liability_terms).trim() : '';
+        liabilityTermsEl.textContent = cleanTerms
+          ? `Terms & Conditions: ${cleanTerms}`
+          : `Borrowers are responsible for up to ${formattedFee} in compensation if this item is damaged, lost, or improperly returned.`;
+        liabilityNotice.classList.remove('hidden');
+      } else {
+        liabilityBadge.classList.add('hidden');
+        liabilitySpec.textContent = 'None Required';
+        liabilitySpec.classList.remove('spec-value-liability');
+        liabilityNotice.classList.add('hidden');
+      }
 
       const imgBox = document.getElementById('img-container');
       imgBox.replaceChildren();
@@ -260,6 +314,22 @@
     function openRequestModal() {
       document.getElementById('modal-item-title').textContent = currentItem.title;
       requestError.classList.add('hidden');
+
+      const modalLiabilityNotice = document.getElementById('modal-liability-notice');
+      const modalLiabilityAmount = document.getElementById('modal-liability-amount');
+      const modalLiabilityTerms = document.getElementById('modal-liability-terms');
+
+      if (hasItemLiability(currentItem)) {
+        const formattedFee = formatPesoAmount(currentItem.liability_amount);
+        modalLiabilityAmount.textContent = formattedFee;
+        const cleanTerms = currentItem.liability_terms ? String(currentItem.liability_terms).trim() : '';
+        modalLiabilityTerms.textContent = cleanTerms
+          ? cleanTerms
+          : `By requesting this item, you acknowledge the ${formattedFee} damage/loss compensation requirement set by the lender.`;
+        modalLiabilityNotice.classList.remove('hidden');
+      } else {
+        modalLiabilityNotice.classList.add('hidden');
+      }
 
       const today = new Date().toISOString().split('T')[0];
       const startInput = document.getElementById('start_date');

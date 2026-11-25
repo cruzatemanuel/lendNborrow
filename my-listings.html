@@ -102,7 +102,13 @@
   <script type="module">
     import { initLayout, showToast, showModal } from '/js/layout.js';
     import { getMe } from '/js/auth.js';
-    import { getMyItems, deleteItem, toggleAvailability } from '/js/items.js';
+    import {
+      getMyItems,
+      deleteItem,
+      toggleAvailability,
+      formatPesoAmount,
+      hasItemLiability
+    } from '/js/items.js';
     import {
       getIncomingRequests,
       approveRequest,
@@ -288,6 +294,20 @@
           titleLink.className = 'td-link';
           titleLink.textContent = item.title;
           titleTd.appendChild(titleLink);
+
+          if (hasItemLiability(item)) {
+            const feeWrap = document.createElement('div');
+            feeWrap.className = 'td-liability-sub';
+            const feeBadge = document.createElement('span');
+            feeBadge.className = 'badge badge-liability';
+            feeBadge.textContent = `Liability: ${formatPesoAmount(item.liability_amount)}`;
+            if (item.liability_terms) {
+              feeBadge.title = item.liability_terms;
+            }
+            feeWrap.appendChild(feeBadge);
+            titleTd.appendChild(feeWrap);
+          }
+
           tr.appendChild(titleTd);
 
           const catTd = document.createElement('td');

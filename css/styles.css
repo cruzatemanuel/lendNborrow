@@ -1292,6 +1292,272 @@ tr:last-child td {
   color: var(--muted);
 }
 
+.badge-liability {
+  background: var(--gold-light);
+  color: var(--gold-text);
+  border: 1px solid #F5D58E;
+}
+
+/* ========================================================
+   Damage & Liability Compensation Components
+   ======================================================== */
+.liability-section {
+  margin-bottom: 18px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.liability-section.is-active {
+  border-color: #E8C47C;
+  background: #FFFDF8;
+  box-shadow: 0 2px 8px rgba(200, 138, 30, 0.08);
+}
+
+.liability-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.liability-toggle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.liability-toggle-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.liability-toggle-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.liability-switch-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.liability-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.liability-switch-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--line);
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+
+.liability-switch-slider::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.liability-checkbox:checked + .liability-switch-slider {
+  background: var(--maroon);
+}
+
+.liability-checkbox:checked + .liability-switch-slider::after {
+  transform: translateX(20px);
+}
+
+.liability-checkbox:focus-visible + .liability-switch-slider {
+  outline: 2px solid var(--maroon);
+  outline-offset: 2px;
+}
+
+.liability-fields-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.24s ease, opacity 0.2s ease;
+}
+
+.liability-fields-panel.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.liability-fields-inner {
+  overflow: hidden;
+  padding: 0 16px;
+}
+
+.liability-fields-panel.is-open .liability-fields-inner {
+  padding: 14px 16px 16px;
+  border-top: 1px solid #F1DFB6;
+}
+
+.liability-terms-group {
+  margin-bottom: 0;
+}
+
+.currency-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.currency-prefix {
+  position: absolute;
+  left: 12px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink-light);
+  pointer-events: none;
+}
+
+.currency-input-wrap input[type="number"] {
+  padding-left: 30px;
+}
+
+.item-card-liability {
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--gold-light);
+  border: 1px solid #F5D58E;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-card-liability-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.item-card-liability .badge-liability {
+  border: none;
+  padding: 0;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.item-card-liability-terms {
+  font-size: 12px;
+  color: var(--ink-light);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.spec-value-liability {
+  color: var(--gold-text);
+}
+
+.liability-detail-notice {
+  margin: 16px 0 20px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--gold-light);
+  border: 1px solid #F5D58E;
+  border-left: 4px solid var(--gold);
+}
+
+.liability-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.liability-detail-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--gold-text);
+}
+
+.liability-detail-amount {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--maroon);
+}
+
+.liability-detail-terms {
+  font-size: 13px;
+  color: var(--ink-light);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.liability-modal-notice {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--gold-light);
+  border: 1px solid #F5D58E;
+  font-size: 13px;
+}
+
+.liability-modal-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--gold-text);
+  margin-bottom: 4px;
+}
+
+.liability-modal-title strong {
+  color: var(--maroon);
+  font-size: 14px;
+}
+
+.liability-modal-terms {
+  color: var(--ink-light);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.td-liability-sub {
+  margin-top: 4px;
+}
+
 /* ========================================================
    Forms, Alerts & Auth Containers
    ======================================================== */

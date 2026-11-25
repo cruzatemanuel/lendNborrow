@@ -44,6 +44,29 @@ export async function toggleAvailability(id) {
 }
 
 /**
+ * Formats a positive numeric value in Philippine Pesos (₱).
+ * Returns null if the value is not a valid positive number.
+ */
+export function formatPesoAmount(amount) {
+  if (amount === null || amount === undefined || amount === '') return null;
+  const num = Number(amount);
+  if (!Number.isFinite(num) || num <= 0) return null;
+  return `₱${num.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+}
+
+/**
+ * Returns true when an item has an active, valid damage/liability fee.
+ */
+export function hasItemLiability(item) {
+  if (!item || !item.has_liability) return false;
+  const num = Number(item.liability_amount);
+  return Number.isFinite(num) && num > 0;
+}
+
+/**
  * Creates a safely rendered DOM card for an item.
  * Strictly uses textContent to prevent XSS.
  */
@@ -104,6 +127,33 @@ export function createItemCardElement(item) {
   meta.appendChild(durationP);
 
   body.appendChild(meta);
+
+  // Liability / Damage Fee Badge & Notice (if required by lender)
+  if (hasItemLiability(item)) {
+    const formattedAmount = formatPesoAmount(item.liability_amount);
+    const liabilityBox = document.createElement('div');
+    liabilityBox.className = 'item-card-liability';
+
+    const liabilityHeader = document.createElement('div');
+    liabilityHeader.className = 'item-card-liability-header';
+
+    const liabilityBadge = document.createElement('span');
+    liabilityBadge.className = 'badge badge-liability';
+    liabilityBadge.textContent = `Damage / Liability Fee: ${formattedAmount}`;
+    liabilityHeader.appendChild(liabilityBadge);
+    liabilityBox.appendChild(liabilityHeader);
+
+    if (item.liability_terms && String(item.liability_terms).trim()) {
+      const termsText = String(item.liability_terms).trim();
+      const termsEl = document.createElement('p');
+      termsEl.className = 'item-card-liability-terms';
+      termsEl.textContent = termsText;
+      termsEl.title = termsText;
+      liabilityBox.appendChild(termsEl);
+    }
+
+    body.appendChild(liabilityBox);
+  }
 
   // Footer CTA
   const footer = document.createElement('div');

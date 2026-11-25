@@ -67,6 +67,67 @@
           <textarea id="description" rows="4" placeholder="Include accessories, care instructions, or available handover hours..."></textarea>
         </div>
 
+        <div class="liability-section" id="liability-section">
+          <label class="liability-toggle-label" for="has_liability">
+            <span class="liability-toggle-copy">
+              <span class="liability-toggle-title">Require Damage / Liability Compensation</span>
+              <span class="liability-toggle-sub">Specify a required replacement or repair fee if this item is damaged, lost, or improperly returned</span>
+            </span>
+            <span class="liability-switch-wrap">
+              <input
+                type="checkbox"
+                id="has_liability"
+                name="has_liability"
+                class="liability-checkbox"
+                role="switch"
+                aria-controls="liability-fields-panel"
+                aria-expanded="false"
+              />
+              <span class="liability-switch-slider" aria-hidden="true"></span>
+            </span>
+          </label>
+
+          <div id="liability-fields-panel" class="liability-fields-panel" aria-hidden="true">
+            <div class="liability-fields-inner">
+              <div class="form-group">
+                <label for="liability_amount">Compensation Amount (₱) *</label>
+                <div class="currency-input-wrap">
+                  <span class="currency-prefix" aria-hidden="true">₱</span>
+                  <input
+                    type="number"
+                    id="liability_amount"
+                    name="liability_amount"
+                    min="1"
+                    max="99999999.99"
+                    step="0.01"
+                    inputmode="decimal"
+                    placeholder="e.g. 500.00"
+                    disabled
+                  />
+                </div>
+                <div class="form-help" id="liability-amount-help">
+                  Enter the required damage or replacement compensation in Philippine Pesos (minimum ₱1.00).
+                </div>
+              </div>
+
+              <div class="form-group liability-terms-group">
+                <label for="liability_terms">Liability Terms / Conditions (Optional)</label>
+                <textarea
+                  id="liability_terms"
+                  name="liability_terms"
+                  rows="2"
+                  maxlength="500"
+                  placeholder="Full replacement cost if screen is cracked or charger is missing"
+                  disabled
+                ></textarea>
+                <div class="form-help">
+                  Clearly describe what constitutes damage, missing parts, or loss for prospective borrowers.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="image">Item Photo (Max 5 MB · JPEG, PNG, WebP)</label>
           <input type="file" id="image" accept="image/jpeg,image/png,image/webp" />
@@ -90,7 +151,7 @@
   <script type="module">
     import { initLayout, showToast } from '/js/layout.js';
     import { getMe } from '/js/auth.js';
-    import { getItem, createItem, updateItem } from '/js/items.js';
+    import { getItem, createItem, updateItem, formatPesoAmount } from '/js/items.js';
 
     await initLayout();
 
@@ -111,6 +172,45 @@
     const imageInput = document.getElementById('image');
     const imgPreviewBox = document.getElementById('img-preview-box');
     const imgPreview = document.getElementById('img-preview');
+
+    const liabilitySection = document.getElementById('liability-section');
+    const hasLiabilityInput = document.getElementById('has_liability');
+    const liabilityPanel = document.getElementById('liability-fields-panel');
+    const liabilityAmountInput = document.getElementById('liability_amount');
+    const liabilityTermsInput = document.getElementById('liability_terms');
+    const liabilityAmountHelp = document.getElementById('liability-amount-help');
+
+    function updatePesoPreview() {
+      const formatted = formatPesoAmount(liabilityAmountInput.value);
+      if (formatted) {
+        liabilityAmountHelp.textContent = `Required compensation fee: ${formatted} (Philippine Pesos).`;
+      } else {
+        liabilityAmountHelp.textContent =
+          'Enter the required damage or replacement compensation in Philippine Pesos (minimum ₱1.00).';
+      }
+    }
+
+    function syncLiabilityState(shouldFocus = false) {
+      const enabled = hasLiabilityInput.checked;
+      hasLiabilityInput.setAttribute('aria-expanded', String(enabled));
+      liabilityPanel.setAttribute('aria-hidden', String(!enabled));
+      liabilityPanel.classList.toggle('is-open', enabled);
+      liabilitySection.classList.toggle('is-active', enabled);
+
+      liabilityAmountInput.disabled = !enabled;
+      liabilityAmountInput.required = enabled;
+      liabilityTermsInput.disabled = !enabled;
+
+      if (enabled) {
+        updatePesoPreview();
+        if (shouldFocus) {
+          setTimeout(() => liabilityAmountInput.focus(), 80);
+        }
+      }
+    }
+
+    hasLiabilityInput.addEventListener('change', () => syncLiabilityState(true));
+    liabilityAmountInput.addEventListener('input', updatePesoPreview);
 
     imageInput.addEventListener('change', () => {
       const file = imageInput.files[0];
@@ -152,6 +252,12 @@
         document.getElementById('max_borrow_days').value = item.max_borrow_days;
         document.getElementById('description').value = item.description || '';
 
+        const itemHasLiability = Boolean(item.has_liability && Number(item.liability_amount) > 0);
+        hasLiabilityInput.checked = itemHasLiability;
+        liabilityAmountInput.value = itemHasLiability ? Number(item.liability_amount).toFixed(2) : '';
+        liabilityTermsInput.value = itemHasLiability && item.liability_terms ? item.liability_terms : '';
+        syncLiabilityState(false);
+
         if (item.image_url) {
           imgPreview.src = item.image_url;
           imgPreviewBox.classList.remove('hidden');
@@ -164,6 +270,26 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       errorAlert.classList.add('hidden');
+
+      const hasLiability = hasLiabilityInput.checked;
+      let normalizedAmount = null;
+      let normalizedTerms = '';
+
+      if (hasLiability) {
+        const rawAmount = liabilityAmountInput.value.trim();
+        const parsedAmount = Number(rawAmount);
+
+        if (!rawAmount || !Number.isFinite(parsedAmount) || parsedAmount < 1) {
+          errorAlert.textContent = 'Please enter a valid compensation amount of at least ₱1.00.';
+          errorAlert.classList.remove('hidden');
+          liabilityAmountInput.focus();
+          return;
+        }
+
+        normalizedAmount = (Math.round(parsedAmount * 100) / 100).toFixed(2);
+        normalizedTerms = liabilityTermsInput.value.trim();
+      }
+
       submitBtn.disabled = true;
       submitBtn.textContent = editId ? 'Saving...' : 'Publishing...';
 
@@ -174,6 +300,9 @@
       formData.append('pickup_location', document.getElementById('pickup_location').value.trim());
       formData.append('max_borrow_days', document.getElementById('max_borrow_days').value);
       formData.append('description', document.getElementById('description').value.trim());
+      formData.append('has_liability', hasLiability ? 'true' : 'false');
+      formData.append('liability_amount', hasLiability ? normalizedAmount : '');
+      formData.append('liability_terms', hasLiability ? normalizedTerms : '');
 
       if (imageInput.files[0]) {
         formData.append('image', imageInput.files[0]);

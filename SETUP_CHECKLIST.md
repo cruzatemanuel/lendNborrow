@@ -63,7 +63,9 @@ Run the SQL migration scripts in order in the **Supabase Dashboard → SQL Edito
    - Configures storage bucket entry.
 2. `supabase/migrations/002_functions.sql`
    - Defines atomic SQL functions: `approve_request` and `confirm_return`.
-3. `cleanup_demo_data.sql` (if cleaning an existing database)
+3. `supabase/migrations/003_add_item_liability.sql`
+   - Adds `has_liability`, `liability_amount`, and `liability_terms` columns and validation constraints to `public.items`.
+4. `cleanup_demo_data.sql` (if cleaning an existing database)
    - Removes any previously seeded demo accounts, sample items, and test borrow requests without affecting schema constraints, triggers, or RLS policies.
 
 ---

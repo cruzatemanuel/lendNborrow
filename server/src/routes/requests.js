@@ -1,8 +1,17 @@
 import { Router } from 'express';
 import { supabaseAdmin, requireSupabase } from '../services/supabase.js';
 import { requireAuth, requireActiveVerifiedStudent } from '../middleware/auth.js';
+import { normalizeItemRecord } from './items.js';
 
 const router = Router();
+
+function normalizeRequestRecord(reqRecord) {
+  if (!reqRecord || typeof reqRecord !== 'object') return reqRecord;
+  return {
+    ...reqRecord,
+    item: reqRecord.item ? normalizeItemRecord(reqRecord.item) : reqRecord.item
+  };
+}
 
 /**
  * Helper to get UTC date string YYYY-MM-DD
@@ -31,7 +40,7 @@ router.get('/incoming', requireSupabase, requireAuth, async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.json({ requests: requests || [] });
+    res.json({ requests: (requests || []).map(normalizeRequestRecord) });
   } catch (err) {
     console.error('Incoming requests error:', err);
     res.status(500).json({ error: 'Failed to retrieve incoming requests.' });
@@ -54,7 +63,7 @@ router.get('/mine', requireSupabase, requireAuth, async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.json({ requests: requests || [] });
+    res.json({ requests: (requests || []).map(normalizeRequestRecord) });
   } catch (err) {
     console.error('Outgoing requests error:', err);
     res.status(500).json({ error: 'Failed to retrieve your borrow requests.' });
@@ -84,7 +93,7 @@ router.get('/:id', requireSupabase, requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Unauthorized to view this request.' });
     }
 
-    res.json({ request });
+    res.json({ request: normalizeRequestRecord(request) });
   } catch (err) {
     console.error('Request detail error:', err);
     res.status(500).json({ error: 'Failed to retrieve request details.' });

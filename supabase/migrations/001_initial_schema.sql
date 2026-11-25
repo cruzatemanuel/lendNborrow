@@ -35,10 +35,17 @@ CREATE TABLE IF NOT EXISTS public.items (
   condition TEXT NOT NULL DEFAULT 'Good',
   pickup_location TEXT NOT NULL DEFAULT 'Alangilan Campus',
   max_borrow_days INTEGER NOT NULL DEFAULT 7 CHECK (max_borrow_days > 0),
+  has_liability BOOLEAN NOT NULL DEFAULT FALSE,
+  liability_amount NUMERIC(10, 2) NULL,
+  liability_terms TEXT NULL,
   image_url TEXT,
   status TEXT NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'borrowed', 'unavailable', 'lost')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT items_liability_amount_check CHECK (
+    (has_liability = FALSE AND liability_amount IS NULL)
+    OR (has_liability = TRUE AND liability_amount IS NOT NULL AND liability_amount > 0)
+  )
 );
 
 -- --------------------------------------------------------
