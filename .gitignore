@@ -22,3 +22,6 @@ Thumbs.db
 tmp/
 dist/
 build/
+
+.agents/
+skills-lock.json
