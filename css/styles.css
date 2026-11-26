@@ -846,34 +846,64 @@ img {
 }
 
 /* ========================================================
-   Authors / Team Section (Landing Page)
+   Authors / Team Section — Portrait Student ID Cards
    ======================================================== */
 .authors-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 264px));
+  grid-template-columns: repeat(3, 224px);
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .author-card {
+  width: 224px;
+  min-height: 336px;
+  padding: 16px 20px 20px;
   background: #FFFFFF;
   border: 1px solid var(--border-light);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.author-id-top {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.author-id-slot {
+  width: 36px;
+  height: 4px;
+  border-radius: var(--radius-xs);
+  background: var(--line);
+}
+
+.author-id-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
 }
 
 .author-photo-box {
-  width: 100%;
-  height: 168px;
+  width: 104px;
+  height: 120px;
   background: #FFFFFF;
-  border-bottom: 1px solid var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .author-photo {
@@ -883,14 +913,14 @@ img {
 }
 
 .author-photo-fallback {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-sm);
   background: var(--maroon);
   color: #FFFFFF;
   font-family: var(--font-display);
   font-synthesis: none;
-  font-size: 24px;
+  font-size: 22px;
   letter-spacing: 0.03em;
   display: flex;
   align-items: center;
@@ -898,7 +928,8 @@ img {
 }
 
 .author-body {
-  padding: 16px;
+  width: 100%;
+  padding: 0;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -907,7 +938,7 @@ img {
 .author-name {
   font-family: var(--font-display);
   font-synthesis: none;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 400;
   letter-spacing: 0.015em;
   color: var(--ink);
@@ -915,7 +946,7 @@ img {
 }
 
 .author-role {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--maroon);
   margin-bottom: 16px;
@@ -927,6 +958,8 @@ img {
   border-top: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
   gap: 8px;
 }
 
@@ -934,10 +967,16 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--ink-light);
   transition: color 160ms var(--ease-out);
-  word-break: break-all;
+  max-width: 100%;
+}
+
+.author-contact-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .author-contact-link:hover {
@@ -945,8 +984,8 @@ img {
 }
 
 .author-icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
   color: var(--muted);
 }
@@ -2330,7 +2369,7 @@ textarea:focus {
   }
 
   .authors-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, 224px);
   }
 
   .stat-panel-grid {
@@ -2524,7 +2563,7 @@ textarea:focus {
   }
 
   .authors-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 224px;
   }
 }
 
