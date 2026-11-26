@@ -6,7 +6,7 @@
   <title>Item Details — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -41,7 +41,7 @@
 
       <div class="item-detail-info">
         <div class="item-detail-badges">
-          <span id="item-category" class="badge badge-maroon">Category</span>
+          <span id="item-category" class="badge badge-category">Category</span>
           <span id="item-status" class="badge badge-green">Available</span>
           <span id="item-liability-badge" class="badge badge-liability hidden"></span>
         </div>
@@ -188,7 +188,9 @@
 
       document.title = `${currentItem.title} — lendNborrow`;
       document.getElementById('item-title').textContent = currentItem.title;
-      document.getElementById('item-category').textContent = currentItem.category;
+      const itemCatEl = document.getElementById('item-category');
+      itemCatEl.textContent = currentItem.category;
+      itemCatEl.dataset.category = currentItem.category || 'Other';
       document.getElementById('item-desc').textContent = currentItem.description || 'No description provided.';
       document.getElementById('item-condition').textContent = currentItem.condition || 'Good';
       document.getElementById('item-duration').textContent = `${currentItem.max_borrow_days} days max`;
@@ -197,7 +199,8 @@
         `${currentItem.owner?.full_name || 'Student'} (${currentItem.owner?.college || 'Alangilan'})`;
 
       const statusEl = document.getElementById('item-status');
-      statusEl.textContent = currentItem.status;
+      const rawStatus = String(currentItem.status || 'available');
+      statusEl.textContent = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
       statusEl.className = `badge ${currentItem.status === 'available' ? 'badge-green' : 'badge-muted'}`;
 
       const liabilityBadge = document.getElementById('item-liability-badge');

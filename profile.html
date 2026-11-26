@@ -6,7 +6,7 @@
   <title>Student Profile — lendNborrow</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="icon" href="/assets/logo.png">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/styles.css">
@@ -34,7 +34,7 @@
         <div class="form-group">
           <label for="email">Institutional GSuite Email</label>
           <input type="email" id="email" readonly class="input-readonly" />
-          <div class="form-help">Linked to your BatStateU account and cannot be changed.</div>
+          <div class="form-help">Linked to your BatStateU account and cannot be changed</div>
         </div>
 
         <div class="form-group">
@@ -51,13 +51,10 @@
             <label for="college">College *</label>
             <select id="college" required>
               <option value="">Select College</option>
-              <option value="CICS">CICS (Informatics & Computing Sciences)</option>
-              <option value="CEAFA">CEAFA (Engineering, Architecture & Fine Arts)</option>
-              <option value="CIT">CIT (Industrial Technology)</option>
-              <option value="CAFAD">CAFAD (Fine Arts & Design)</option>
-              <option value="CABEIHM">CABEIHM (Accountancy, Business & Economics)</option>
-              <option value="CAS">CAS (Arts & Sciences)</option>
-              <option value="CTE">CTE (Teacher Education)</option>
+              <option value="CICS">CICS (College of Informatics and Computing Sciences)</option>
+              <option value="COE">COE (College of Engineering)</option>
+              <option value="CET">CET (College of Engineering Technology)</option>
+              <option value="CAFAD">CAFAD (College of Architecture, Fine Arts, and Design)</option>
             </select>
           </div>
         </div>
@@ -65,7 +62,7 @@
         <div class="form-row">
           <div class="form-group">
             <label for="campus">Campus</label>
-            <input type="text" id="campus" value="Alangilan" placeholder="Alangilan" />
+            <input type="text" id="campus" value="Alangilan" readonly class="input-readonly" />
           </div>
           <div class="form-group">
             <label for="contact">Contact Number</label>

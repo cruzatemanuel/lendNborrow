@@ -15,7 +15,7 @@ function createIcon(paths, className = 'sidebar-icon') {
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('fill', 'none');
   svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-width', '1.5');
   svg.setAttribute('stroke-linecap', 'round');
   svg.setAttribute('stroke-linejoin', 'round');
   svg.setAttribute('aria-hidden', 'true');
@@ -129,8 +129,48 @@ function isRouteActive(currentPath, href) {
   return currentPath.includes(slug);
 }
 
+function createPageTopHeader() {
+  const banner = document.createElement('div');
+  banner.className = 'page-top-header';
+  banner.id = 'page-top-header';
+  banner.setAttribute('role', 'region');
+  banner.setAttribute('aria-label', 'University campus header');
+
+  const bgImg = document.createElement('img');
+  bgImg.src = '/assets/BSU-header.jpg';
+  bgImg.alt = 'BatStateU Alangilan STEER Hub building';
+  bgImg.className = 'page-top-header-img';
+  banner.appendChild(bgImg);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'page-top-header-overlay';
+  overlay.setAttribute('aria-hidden', 'true');
+  banner.appendChild(overlay);
+
+  const content = document.createElement('div');
+  content.className = 'page-top-header-content';
+
+  const identity = document.createElement('div');
+  identity.className = 'page-top-header-identity';
+
+  const uniTitle = document.createElement('span');
+  uniTitle.className = 'page-top-header-title';
+  uniTitle.textContent = 'Batangas State University';
+  identity.appendChild(uniTitle);
+
+  const uniSub = document.createElement('span');
+  uniSub.className = 'page-top-header-sub';
+  uniSub.textContent = 'The National Engineering University · Alangilan Campus';
+  identity.appendChild(uniSub);
+
+  content.appendChild(identity);
+
+  banner.appendChild(content);
+  return banner;
+}
+
 /**
- * Initializes the global persistent left-hand sidebar, mobile drawer, and user auth footer.
+ * Initializes the global persistent left-hand sidebar, mobile drawer, top campus header, and user auth footer.
  */
 export async function initLayout() {
   if (document.getElementById('sidebar-drawer')) return;
@@ -142,6 +182,9 @@ export async function initLayout() {
   if (mainEl) {
     if (!mainEl.id) mainEl.id = 'main-content';
     if (!mainEl.hasAttribute('tabindex')) mainEl.setAttribute('tabindex', '-1');
+    if (!document.getElementById('page-top-header')) {
+      mainEl.prepend(createPageTopHeader());
+    }
   }
 
   const currentPath = window.location.pathname;

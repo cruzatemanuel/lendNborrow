@@ -97,13 +97,15 @@ export function createItemCardElement(item) {
   badgeRow.className = 'item-badge-row';
 
   const catBadge = document.createElement('span');
-  catBadge.className = 'badge badge-maroon';
+  catBadge.className = 'badge badge-category';
+  catBadge.dataset.category = item.category || 'Other';
   catBadge.textContent = item.category || 'General';
   badgeRow.appendChild(catBadge);
 
   const statusBadge = document.createElement('span');
   statusBadge.className = `badge ${item.status === 'available' ? 'badge-green' : 'badge-muted'}`;
-  statusBadge.textContent = item.status;
+  const rawStatus = String(item.status || 'available');
+  statusBadge.textContent = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
   badgeRow.appendChild(statusBadge);
 
   body.appendChild(badgeRow);

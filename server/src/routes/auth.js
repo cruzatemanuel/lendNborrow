@@ -13,6 +13,9 @@ const router = Router();
 // Strict regex check for BatStateU institutional email
 const BATSTATEU_EMAIL_REGEX = /^[^@\s]+@g\.batstate-u\.edu\.ph$/i;
 
+// Official Alangilan Campus Colleges
+const ALANGILAN_COLLEGES = ['CICS', 'COE', 'CET', 'CAFAD'];
+
 /**
  * Helper to set standard httpOnly session cookie.
  */
@@ -56,6 +59,13 @@ router.post('/register', requireSupabase, async (req, res) => {
   if (!password || password.length < 6) {
     return res.status(400).json({
       error: 'Password must be at least 6 characters long.'
+    });
+  }
+
+  const cleanCollege = (college || '').trim().toUpperCase();
+  if (cleanCollege && !ALANGILAN_COLLEGES.includes(cleanCollege)) {
+    return res.status(400).json({
+      error: 'Invalid college. Allowed Alangilan Campus colleges are CICS, COE, CET, and CAFAD.'
     });
   }
 
@@ -226,8 +236,16 @@ router.patch('/profile', requireAuth, async (req, res) => {
 
   if (full_name !== undefined) updates.full_name = full_name.trim();
   if (student_number !== undefined) updates.student_number = student_number.trim();
-  if (college !== undefined) updates.college = college.trim();
-  if (campus !== undefined) updates.campus = campus.trim();
+  if (college !== undefined) {
+    const cleanCollege = college.trim().toUpperCase();
+    if (cleanCollege && !ALANGILAN_COLLEGES.includes(cleanCollege)) {
+      return res.status(400).json({
+        error: 'Invalid college. Allowed Alangilan Campus colleges are CICS, COE, CET, and CAFAD.'
+      });
+    }
+    updates.college = cleanCollege;
+  }
+  if (campus !== undefined) updates.campus = 'Alangilan';
   if (contact !== undefined) updates.contact = contact.trim();
   if (avatar_url !== undefined) updates.avatar_url = avatar_url;
 

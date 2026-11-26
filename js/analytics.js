@@ -43,7 +43,7 @@ export function renderActivityFeed(container, activities = []) {
   if (!activities || activities.length === 0) {
     const emptyP = document.createElement('p');
     emptyP.className = 'form-help';
-    emptyP.textContent = 'No lending or borrowing activity recorded yet.';
+    emptyP.textContent = 'No lending or borrowing activity recorded yet';
     container.appendChild(emptyP);
     return;
   }
@@ -161,13 +161,13 @@ export function initCommunityCharts(data = {}) {
             data: counts,
             backgroundColor: [
               '#8B1E24',
-              '#C88A1E',
-              '#334155',
-              '#1D4ED8',
-              '#15803D',
-              '#64748B'
+              '#5E554A',
+              '#7B7266',
+              '#A39B8F',
+              '#C7C0B5',
+              '#DFD9CE'
             ],
-            borderWidth: 1,
+            borderWidth: 2,
             borderColor: '#FFFFFF'
           }]
         },
@@ -178,8 +178,13 @@ export function initCommunityCharts(data = {}) {
             legend: {
               position: 'bottom',
               labels: {
-                boxWidth: 12,
-                font: { size: 12 }
+                color: '#5E554A',
+                boxWidth: 10,
+                padding: 12,
+                font: {
+                  family: "'DM Sans', -apple-system, sans-serif",
+                  size: 12
+                }
               }
             }
           }
@@ -204,20 +209,45 @@ export function initCommunityCharts(data = {}) {
         data: {
           labels,
           datasets: [{
-            label: 'Borrow Requests',
+            label: 'Borrow requests',
             data: counts,
             backgroundColor: '#8B1E24',
             borderRadius: 4,
-            maxBarThickness: 44
+            maxBarThickness: 40
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                color: '#7B7266',
+                font: {
+                  family: "'IBM Plex Mono', ui-monospace, monospace",
+                  size: 11
+                }
+              }
+            },
             y: {
               beginAtZero: true,
-              ticks: { precision: 0 }
+              border: {
+                display: false
+              },
+              grid: {
+                color: 'rgba(31, 27, 22, 0.06)'
+              },
+              ticks: {
+                precision: 0,
+                color: '#7B7266',
+                font: {
+                  family: "'IBM Plex Mono', ui-monospace, monospace",
+                  size: 11
+                }
+              }
             }
           },
           plugins: {

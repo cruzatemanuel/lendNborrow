@@ -121,10 +121,13 @@ router.get('/community', requireSupabase, async (req, res) => {
       return res.status(400).json({ error: requestsError.message });
     }
 
+    const allowedColleges = ['CICS', 'COE', 'CET', 'CAFAD'];
     const collegeMap = {};
     (requests || []).forEach(r => {
-      const col = r.borrower?.college || 'Unspecified';
-      collegeMap[col] = (collegeMap[col] || 0) + 1;
+      const col = r.borrower?.college;
+      if (col && allowedColleges.includes(col)) {
+        collegeMap[col] = (collegeMap[col] || 0) + 1;
+      }
     });
 
     const collegeActivity = Object.entries(collegeMap)
