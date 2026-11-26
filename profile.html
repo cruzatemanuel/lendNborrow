@@ -38,14 +38,14 @@
         </div>
 
         <div class="form-group">
-          <label for="full_name">Full Name *</label>
-          <input type="text" id="full_name" required placeholder="Enter your full name" />
+          <label for="full_name">Full Name</label>
+          <input type="text" id="full_name" readonly class="input-readonly" />
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="student_number">Student Number / SR-Code *</label>
-            <input type="text" id="student_number" required placeholder="e.g. 22-00000" />
+            <label for="student_number">Student Number / SR-Code</label>
+            <input type="text" id="student_number" readonly class="input-readonly" />
           </div>
           <div class="form-group">
             <label for="college">College *</label>
@@ -118,16 +118,12 @@
       submitBtn.disabled = true;
       submitBtn.textContent = 'Saving...';
 
-      const full_name = document.getElementById('full_name').value.trim();
-      const student_number = document.getElementById('student_number').value.trim();
       const college = document.getElementById('college').value;
       const campus = document.getElementById('campus').value.trim();
       const contact = document.getElementById('contact').value.trim();
 
       try {
         await updateProfile({
-          full_name,
-          student_number,
           college,
           campus,
           contact

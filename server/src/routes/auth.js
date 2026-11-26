@@ -234,8 +234,12 @@ router.patch('/profile', requireAuth, async (req, res) => {
     updated_at: new Date().toISOString()
   };
 
-  if (full_name !== undefined) updates.full_name = full_name.trim();
-  if (student_number !== undefined) updates.student_number = student_number.trim();
+  if (full_name !== undefined && !req.profile?.full_name) {
+    updates.full_name = full_name.trim();
+  }
+  if (student_number !== undefined && !req.profile?.student_number) {
+    updates.student_number = student_number.trim();
+  }
   if (college !== undefined) {
     const cleanCollege = college.trim().toUpperCase();
     if (cleanCollege && !ALANGILAN_COLLEGES.includes(cleanCollege)) {
